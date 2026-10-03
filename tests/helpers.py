@@ -46,3 +46,9 @@ def py(body: str) -> str:
     """A Python capability script. `inp` is the parsed stdin; `body` prints the output."""
     return ("#!/usr/bin/env python3\nimport json, os, sys, time\ninp = json.load(sys.stdin)\n"
             + textwrap.dedent(body).strip() + "\n")
+
+
+def make_runtime(data_dir: Path, caps_dir: Path, **extra):
+    """A loader.Runtime over a temporary data dir and capabilities folder."""
+    from orbit import loader
+    return loader.open_runtime(make_cfg(data_dir, caps_dir=caps_dir, **extra))
