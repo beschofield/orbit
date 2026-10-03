@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from orbit import characters, config, loader, sync
 from orbit.config import ConfigError
 from orbit.contract import Output
+from orbit.log import log
 
 CORE_COMMANDS = [
     ("greet", "show the login greeting"),
@@ -66,7 +67,7 @@ def use_color() -> bool:
 
 def show(out: Output) -> None:
     if out.print_text:
-        print(out.print_text)
+        print(characters.clean(out.print_text))  # no escape codes from a capability reach the terminal
     if out.say:
         print(characters.render_says(out.say, color=use_color()))
     sys.stdout.flush()
@@ -87,21 +88,34 @@ def run_command(rt: loader.Runtime, m, name: str, args: list[str]) -> int:
 
 
 def greet(rt: loader.Runtime) -> int:
+    """Show the login greeting, then record what it did.
+
+    Login output often means "these notes were seen", so nothing runs unless a person
+    can see it (a terminal, or ORBIT_FORCE_GREET=1 for tests), and every say is on
+    screen before any of it is recorded: if the shell's 1 s timeout cuts us off, a note
+    stays unread rather than being marked read unseen.
+    """
+    if not sys.stdout.isatty() and not os.environ.get("ORBIT_FORCE_GREET"):
+        return 0
     ms = [m for _, m in sorted(rt.manifests.items()) if "login" in m.triggers]
     if not ms:
         return 0
     with ThreadPoolExecutor(max_workers=len(ms)) as pool:
         results = list(pool.map(lambda m: loader.run(rt, m, {"kind": "login"}), ms))
-    says, emitted = [], False
-    for m, res in zip(ms, results):
-        if res.output is None:
-            continue
-        loader.apply(rt, m, res.output, "login")
-        says.extend(res.output.say)
-        emitted = emitted or bool(res.output.emit)
+    done = [(m, res.output) for m, res in zip(ms, results) if res.output is not None]
+    says = [say for _, out in done for say in out.say]
     if says:
         print(characters.render_says(says, color=use_color()))
-        sys.stdout.flush()  # print before poking, in case the shell's 1 s timeout cuts us off
+        sys.stdout.flush()
+    emitted = False
+    for m, out in done:
+        try:
+            loader.apply(rt, m, out, "login")
+        except Exception as e:
+            log(rt.cfg.data_dir, m.name, f"login output was shown but not recorded ({type(e).__name__}: {e}) — "
+                                     f"check that {rt.cfg.db_path} is writable and the disk isn't full")
+            continue
+        emitted = emitted or bool(out.emit)
     if emitted:
         sync.poke_peer(rt.cfg)
     return 0

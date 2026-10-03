@@ -1,5 +1,6 @@
 import io
 import os
+import sys
 import tempfile
 import time
 from contextlib import redirect_stderr, redirect_stdout
@@ -95,6 +96,45 @@ class CliTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("ok", out)
         self.assertEqual(err, "")
+
+    def test_print_output_has_control_characters_stripped(self):
+        write_cap(self.caps, "evil", py('print(json.dumps({"print": "\\u001b[2Jboom\\nline two"}))'),
+                  commands=[{"name": "evil", "usage": "evil", "help": "prints escapes"}])
+        code, out, _ = run_cli(self.data, "evil")
+        self.assertEqual(code, 0)
+        self.assertNotIn("\x1b", out)
+        self.assertIn("[2Jboom\nline two", out)
+
+    def test_greet_without_a_terminal_does_nothing(self):
+        write_cap(self.caps, "seen", py(
+            'print(json.dumps({"say": [{"who": "pluto", "mood": "love", "text": "a note"}], '
+            '"emit": [{"type": "seen.read", "data": {}}]}))'),
+            triggers=["login"], event_types={"seen.read": {"keep": "log"}})
+        code, out, _ = run_cli(self.data, "greet", env={"ORBIT_FORCE_GREET": ""})
+        self.assertEqual((code, out), (0, ""))
+        store = Store(self.data / "orbit.db", "charon")
+        try:
+            self.assertEqual(store.recent(["seen.read"]), [])
+        finally:
+            store.close()
+
+    def test_greet_shows_says_before_applying_and_survives_apply_errors(self):
+        write_cap(self.caps, "seen", py(
+            'print(json.dumps({"say": [{"who": "pluto", "mood": "love", "text": "a note"}], '
+            '"emit": [{"type": "seen.read", "data": {}}]}))'),
+            triggers=["login"], event_types={"seen.read": {"keep": "log"}})
+        shown_first = []
+
+        def failing_apply(rt, m, out, kind):
+            shown_first.append("a note" in sys.stdout.getvalue())
+            raise RuntimeError("disk full")
+
+        with mock.patch("orbit.loader.apply", side_effect=failing_apply):
+            code, out, _ = run_cli(self.data, "greet")
+        self.assertEqual(code, 0)
+        self.assertIn("a note", out)
+        self.assertEqual(shown_first, [True])
+        self.assertIn("RuntimeError: disk full", (self.data / "logs" / "seen.log").read_text(encoding="utf-8"))
 
     def test_missing_config_says_run_init(self):
         code, _, err = run_cli(self.root / "empty", "help")

@@ -1,4 +1,5 @@
 import os
+import pty
 import subprocess
 import tempfile
 import unittest
@@ -30,13 +31,31 @@ class ShellSnippetTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def bash(self, script: str, path: str | None = None) -> subprocess.CompletedProcess:
+    def bash(self, script: str, path: str | None = None, tty: bool = False) -> subprocess.CompletedProcess:
+        """Run an interactive bash. tty=True gives it a terminal on stdout, as a real login has."""
         env = {"HOME": str(self.home), "PATH": path or f"{self.bin}:/usr/bin:/bin", "TERM": "dumb"}
-        return subprocess.run(["bash", "-i", "-c", script], env=env, capture_output=True, text=True, timeout=10)
+        if not tty:
+            return subprocess.run(["bash", "-i", "-c", script], env=env, capture_output=True, text=True, timeout=10)
+        master, slave = pty.openpty()
+        try:
+            r = subprocess.run(["bash", "-i", "-c", script], env=env, stdin=subprocess.DEVNULL, stdout=slave,
+                               stderr=subprocess.PIPE, text=True, timeout=10)
+        finally:
+            os.close(slave)
+        chunks = []
+        try:
+            while chunk := os.read(master, 4096):
+                chunks.append(chunk)
+        except OSError:  # EIO once the terminal is drained
+            pass
+        finally:
+            os.close(master)
+        r.stdout = b"".join(chunks).decode("utf-8", "replace").replace("\r\n", "\n")
+        return r
 
     def test_prompt_reads_the_file_and_never_runs_orbit(self):
         (self.home / ".orbit" / "prompt").write_text("♇ pluto: idle", encoding="utf-8")
-        r = self.bash('__orbit_prompt; __orbit_prompt; __orbit_prompt; printf "[%s]" "$ORBIT_PS"')
+        r = self.bash('__orbit_prompt; __orbit_prompt; __orbit_prompt; printf "[%s]" "$ORBIT_PS"', tty=True)
         self.assertIn("[♇ pluto: idle]", r.stdout)
         self.assertEqual(self.calls.read_text().splitlines(), ["greet"])  # only the login greeting
 
@@ -44,13 +63,24 @@ class ShellSnippetTest(unittest.TestCase):
         r = self.bash('__orbit_prompt; printf "[%s]" "$ORBIT_PS"')
         self.assertIn("[]", r.stdout)
 
+    def test_prompt_hook_keeps_the_exit_status(self):
+        (self.home / ".orbit" / "prompt").write_text("x", encoding="utf-8")
+        self.assertIn("st=1", self.bash('false; __orbit_prompt; echo "st=$?"').stdout)
+        (self.home / ".orbit" / "prompt").unlink()
+        self.assertIn("st=0", self.bash('true; __orbit_prompt; echo "st=$?"').stdout)
+        self.assertIn("st=3", self.bash('(exit 3); __orbit_prompt; echo "st=$?"').stdout)
+
+    def test_greet_is_skipped_when_stdout_is_not_a_terminal(self):
+        self.bash("echo ready")  # capture_output: stdout is a pipe
+        self.assertFalse(self.calls.exists())
+
     def test_sourcing_twice_adds_hooks_once(self):  # Review Focus #2
         r = self.bash('source ~/.bashrc; printf "%s\\n" "$PS1" "$PROMPT_COMMAND"')
         self.assertEqual(r.stdout.count("${ORBIT_PS:+"), 1, r.stdout)
         self.assertEqual(r.stdout.count("__orbit_prompt"), 1, r.stdout)
 
     def test_without_orbit_installed_the_shell_still_starts(self):
-        r = self.bash("echo ready", path="/usr/bin:/bin")
+        r = self.bash("echo ready", path="/usr/bin:/bin", tty=True)
         self.assertEqual(r.returncode, 0)
         self.assertIn("ready", r.stdout)
         self.assertFalse(self.calls.exists())

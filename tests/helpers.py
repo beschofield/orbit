@@ -60,11 +60,16 @@ def make_runtime(data_dir: Path, caps_dir: Path, **extra):
     return loader.open_runtime(make_cfg(data_dir, caps_dir=caps_dir, **extra))
 
 
-def run_cli(data_dir: Path, *args: str) -> tuple[int, str, str]:
-    """Run `orbit <args>` in-process against data_dir. Returns (exit code, stdout, stderr)."""
+def run_cli(data_dir: Path, *args: str, env: dict | None = None) -> tuple[int, str, str]:
+    """Run `orbit <args>` in-process against data_dir. Returns (exit code, stdout, stderr).
+
+    stdout is not a terminal here, so ORBIT_FORCE_GREET=1 lets `greet` run; pass
+    env={"ORBIT_FORCE_GREET": ""} to test the no-terminal path.
+    """
     from orbit import cli
     out, err = io.StringIO(), io.StringIO()
-    with mock.patch.dict(os.environ, {"ORBIT_DIR": str(data_dir), "NO_COLOR": "1"}), \
+    extra = {"ORBIT_DIR": str(data_dir), "NO_COLOR": "1", "ORBIT_FORCE_GREET": "1", **(env or {})}
+    with mock.patch.dict(os.environ, extra), \
             redirect_stdout(out), redirect_stderr(err):
         try:
             code = cli.main(list(args))

@@ -136,7 +136,7 @@ Every key is optional. Print `{}` (or nothing at all) to do nothing.
 | `say` | A list of `{"who", "mood", "text"}`. `who` is `"pluto"` or `"charon"`. `mood` is one of `neutral`, `happy`, `sleepy`, `love`, `thinking`, `worried`. `text` is 1–280 characters, and newlines are fine. |
 | `emit` | A list of `{"type", "data", "v"}`. `type` must be in your `event_types`. `data` is an object of at most 16 KB. `v` defaults to 1. The core adds `origin`, `seq` and `ts`, stores the event and syncs it. |
 | `prompt` | Your segment of the shell prompt: at most 40 printable characters, with no newlines or control codes. `""` clears it; leaving the key out keeps the current one. |
-| `print` | Plain text shown to the person; only used for command triggers. Good for messages like "usage: ...". |
+| `print` | Plain text shown to the person; only used for command triggers. Good for messages like "usage: ...". Control characters (escape codes) are stripped; newlines are kept. |
 
 The exit code must be 0, and stdout must be exactly one JSON object. **Send debug
 output to stderr**, which goes to `~/.orbit/logs/<name>.log`.
