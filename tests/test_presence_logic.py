@@ -1,4 +1,6 @@
 import importlib.util
+import os
+import tempfile
 import unittest
 
 from tests.helpers import REPO
@@ -7,11 +9,8 @@ spec = importlib.util.spec_from_file_location("presence_main", REPO / "capabilit
 presence = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(presence)
 
-WHO = """\
-becca    pts/0        2026-10-03 13:58   .          1234 (100.69.87.124)
-becca    pts/1        2026-10-03 09:00 01:20        2345 (100.69.87.124)
-gabby    pts/2        2026-10-03 12:00 00:02        3456 (100.69.87.124)
-"""
+NOW = 1_790_000_000.0
+
 
 
 def inp(trigger="tick", mine=None, theirs=None, online=True):
@@ -24,26 +23,39 @@ def inp(trigger="tick", mine=None, theirs=None, online=True):
 
 
 class PresenceLogicTest(unittest.TestCase):
-    def test_parse_idle(self):
-        self.assertEqual(presence.parse_idle("."), 0)
-        self.assertEqual(presence.parse_idle("01:20"), 80)
-        self.assertEqual(presence.parse_idle("old"), 1440)
-        self.assertIsNone(presence.parse_idle("?"))
+    def make_pts(self, ages: dict) -> str:
+        """A fake /dev/pts: one file per tty, its atime set `ages[name]` seconds before NOW."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        for name, age in ages.items():
+            path = os.path.join(tmp.name, name)
+            open(path, "w").close()
+            os.utime(path, (NOW - age, NOW - age))
+        return tmp.name
 
-    def test_idle_minutes_takes_the_freshest_session(self):
-        self.assertEqual(presence.idle_minutes(WHO, "becca"), 0)
-        self.assertEqual(presence.idle_minutes(WHO, "gabby"), 2)
-        self.assertIsNone(presence.idle_minutes(WHO, "nobody"))
+    def test_idle_minutes_takes_the_freshest_tty(self):
+        pts = self.make_pts({"0": 20, "1": 80 * 60, "ptmx": 0})
+        self.assertEqual(presence.idle_minutes(pts, uid=os.getuid(), now=NOW), 0)
+        pts = self.make_pts({"3": 150, "4": 3 * 3600})
+        self.assertEqual(presence.idle_minutes(pts, uid=os.getuid(), now=NOW), 2)
+
+    def test_idle_minutes_ignores_ptmx_and_other_users(self):
+        pts = self.make_pts({"ptmx": 0, "0": 30})
+        self.assertIsNone(presence.idle_minutes(pts, uid=os.getuid() + 1, now=NOW))
+        self.assertIsNone(presence.idle_minutes(self.make_pts({"ptmx": 0}), uid=os.getuid(), now=NOW))
+
+    def test_idle_minutes_without_a_pts_dir_is_none(self):
+        self.assertIsNone(presence.idle_minutes("/nonexistent/pts", uid=os.getuid(), now=NOW))
 
     def test_state_thresholds(self):
         self.assertEqual([presence.state_for(m) for m in (0, 4, 5, 59, 60, None)],
                          ["active", "active", "idle", "idle", "away", "away"])
 
     def test_tick_emits_only_on_change(self):
-        unchanged = presence.tick(inp(mine={"state": "active", "manual": False}), who_output=WHO, user="becca")
+        unchanged = presence.tick(inp(mine={"state": "active", "manual": False}), idle=0)
         self.assertNotIn("emit", unchanged)
         self.assertIn("prompt", unchanged)
-        changed = presence.tick(inp(mine={"state": "idle", "manual": False}), who_output=WHO, user="becca")
+        changed = presence.tick(inp(mine={"state": "idle", "manual": False}), idle=0)
         self.assertEqual(changed["emit"][0]["data"], {"state": "active", "manual": False})
 
     def test_control_characters_from_the_peer_are_dropped(self):
