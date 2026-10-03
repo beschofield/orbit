@@ -71,6 +71,25 @@ def discover(cap_dir: Path) -> tuple[dict[str, Manifest], list[str]]:
     return manifests, problems
 
 
+def folder_signature(cap_dir: Path) -> dict[str, int]:
+    """Capability folder name -> newest mtime of its top-level files.
+
+    Cheap enough to run every 30 s, and it changes when a capability is added, removed,
+    or has its manifest or program edited, which is when orbitd must re-discover.
+    """
+    sig: dict[str, int] = {}
+    try:
+        dirs = [p for p in cap_dir.iterdir() if p.is_dir() and not p.name.startswith((".", "_"))]
+    except OSError:
+        return sig
+    for d in dirs:
+        try:
+            sig[d.name] = max([d.stat().st_mtime_ns, *(p.stat().st_mtime_ns for p in d.iterdir() if p.is_file())])
+        except OSError:
+            sig[d.name] = -1
+    return sig
+
+
 def build_input(rt: Runtime, m: Manifest, trigger: dict) -> dict:
     latest: dict[str, dict] = {rt.cfg.me: {}, rt.cfg.peer: {}}
     for origin, by_type in rt.store.latest_all().items():

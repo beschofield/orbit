@@ -43,6 +43,13 @@ def checks(rt: loader.Runtime) -> Iterator[tuple[bool, str]]:
         mine = sync.get_json(f"http://{host}:{cfg.port}/health")
         if mine and mine.get("me") == cfg.me:
             yield True, f"orbitd is running on {host}:{cfg.port}"
+            running, on_disk = set(mine.get("capabilities", [])), set(rt.manifests)
+            if running != on_disk:
+                details = [f"orbitd hasn't loaded: {', '.join(sorted(on_disk - running))}" if on_disk - running else "",
+                           f"orbitd still runs removed: {', '.join(sorted(running - on_disk))}"
+                           if running - on_disk else ""]
+                yield False, (f"{'; '.join(d for d in details if d)} — it rescans every 30 s; if this persists, "
+                              "`systemctl --user restart orbitd`")
         else:
             yield False, (f"orbitd is not answering on {host}:{cfg.port} — try `systemctl --user status orbitd` "
                           f"and {cfg.data_dir}/logs/orbitd.log")

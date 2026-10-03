@@ -21,6 +21,7 @@ from orbit.config import Config
 from orbit.log import log
 
 WHOIS_TTL = 300.0
+RESCAN_SECONDS = 30.0  # how often orbitd looks for new or changed capabilities
 
 
 class DaemonError(Exception):
@@ -139,6 +140,7 @@ class Daemon:
         self.auth = Authorizer(rt.cfg, whois)
         self.server: ThreadingHTTPServer | None = None
         self.loop_thread: threading.Thread | None = None
+        self.caps_signature: dict[str, int] = {}
 
     def start(self, host: str) -> None:
         self.server = ThreadingHTTPServer((host, self.rt.cfg.port), make_handler(self.rt, self.auth, self.poke))
@@ -154,14 +156,47 @@ class Daemon:
             log(self.rt.cfg.data_dir, "orbitd", f"{what} crashed: {type(e).__name__}: {e}")
             return None
 
+    def rescan(self, ticks: dict[str, float]) -> None:
+        """Re-discover capabilities if their folder changed, so adding one needs no restart.
+
+        The Runtime's attributes are replaced (not mutated) because HTTP threads read them.
+        `ticks` keeps existing schedules; new tick capabilities are due at once.
+        """
+        rt = self.rt
+        sig = loader.folder_signature(rt.cfg.capabilities_dir)
+        if sig == self.caps_signature:
+            return
+        self.caps_signature = sig
+        manifests, problems = loader.discover(rt.cfg.capabilities_dir)
+        old = set(rt.manifests)
+        added, removed = sorted(set(manifests) - old), sorted(old - set(manifests))
+        rt.manifests, rt.problems = manifests, problems
+        parts = [f"added {', '.join(added)}" if added else "", f"removed {', '.join(removed)}" if removed else ""]
+        log(rt.cfg.data_dir, "orbitd", f"capabilities changed: {'; '.join(p for p in parts if p) or 'edited'}"
+                                       f" (now: {', '.join(sorted(manifests)) or 'none'})")
+        for p in problems:
+            log(rt.cfg.data_dir, "orbitd", f"capability problem: {p}")
+        for name in list(ticks):
+            if name not in manifests or "tick" not in manifests[name].triggers:
+                del ticks[name]
+        for name, m in manifests.items():
+            if "tick" in m.triggers:
+                ticks.setdefault(name, 0.0)
+        prompt.rebuild(rt.store, rt.cfg, rt.manifests)
+
     def loop(self) -> None:
         rt = self.rt
         self._safely("prompt rebuild", lambda: prompt.rebuild(rt.store, rt.cfg, rt.manifests))
         backoff = sync.Backoff()
         next_pull = 0.0
         ticks = {name: 0.0 for name, m in rt.manifests.items() if "tick" in m.triggers}
+        self.caps_signature = loader.folder_signature(rt.cfg.capabilities_dir)
+        next_rescan = time.monotonic() + RESCAN_SECONDS
         while not self.stop.is_set():
             now = time.monotonic()
+            if now >= next_rescan:
+                self._safely("capability rescan", lambda: self.rescan(ticks))
+                next_rescan = now + RESCAN_SECONDS
             if self.poke.is_set() or now >= next_pull:
                 self.poke.clear()
                 ok = self._safely("pull", lambda: sync.pull_once(rt))
@@ -171,8 +206,11 @@ class Daemon:
                 else:
                     next_pull = now + backoff.next()
             for name, due in list(ticks.items()):
+                m = rt.manifests.get(name)
+                if m is None:  # removed by a rescan
+                    del ticks[name]
+                    continue
                 if now >= due:
-                    m = rt.manifests[name]
                     res = self._safely(f"{name} tick", lambda m=m: loader.invoke(rt, m, {"kind": "tick"}))
                     if res and res.output and res.output.emit:
                         sync.poke_peer(rt.cfg)

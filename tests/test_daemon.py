@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest import mock
 
 from orbit import daemon, loader
-from tests.helpers import FIXTURE_CAPS, Machine, make_cfg, wait_for
+from tests.helpers import FIXTURE_CAPS, Machine, make_cfg, py, wait_for, write_cap
 
 
 class AuthorizerTest(unittest.TestCase):
@@ -148,3 +148,36 @@ class TwoMachineTest(unittest.TestCase):
             self.assertTrue(self.charon.daemon.loop_thread.is_alive())
         log = (self.charon.dir / "logs" / "orbitd.log").read_text(encoding="utf-8")
         self.assertIn("RuntimeError: boom", log)
+
+
+class RescanTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.caps = root / "caps"
+        self.caps.mkdir()
+        self.data = root / "data"
+        cfg = make_cfg(self.data, caps_dir=self.caps, port=19784, bind="127.0.0.1",
+                       peer_url="http://127.0.0.1:9", dev_allow_ips=["127.0.0.1"])
+        patcher = mock.patch.object(daemon, "RESCAN_SECONDS", 0.2)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.d = daemon.Daemon(loader.open_runtime(cfg))
+        self.d.start("127.0.0.1")
+
+    def tearDown(self):
+        self.d.close()
+        self.tmp.cleanup()
+
+    def prompt(self) -> str:
+        path = self.data / "prompt"
+        return path.read_text(encoding="utf-8") if path.exists() else ""
+
+    def test_a_new_tick_capability_runs_without_a_restart(self):
+        time.sleep(0.3)  # the daemon has looked at the empty folder at least once
+        write_cap(self.caps, "clock", py('print(json.dumps({"prompt": "tick!"}))'),
+                  triggers=["tick"], tick_seconds=10)
+        self.assertTrue(wait_for(lambda: self.prompt() == "tick!", timeout=5), self.prompt())
+        self.assertIn("clock", get("http://127.0.0.1:19784/health")[1]["capabilities"])
+        log = (self.data / "logs" / "orbitd.log").read_text(encoding="utf-8")
+        self.assertIn("capabilities changed", log)

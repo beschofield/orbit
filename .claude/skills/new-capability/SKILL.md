@@ -67,5 +67,6 @@ two machines on one computer").
 - Write `capabilities/<name>/README.md`: what it does, its commands, triggers and
   event types.
 - Commit.
+- orbitd notices new or changed capabilities within 30 s; no restart needed.
 - **Tell the person to install the change on both machines** (copy or pull the repo
   on each). Capability code doesn't sync, and `orbit doctor` will flag a mismatch.

@@ -59,6 +59,18 @@ class DoctorTest(unittest.TestCase):
             charon.stop()
             pluto.stop()
 
+    def test_running_daemon_with_old_capabilities_is_flagged(self):
+        caps = self.root / "caps"
+        write_cap(caps, "ping", py('print("{}")'))
+        charon = Machine(self.root, "charon", "pluto", 19780, 19781, caps)
+        charon.start()
+        try:
+            write_cap(caps, "fresh", py('print("{}")'))
+            out = charon.cli("doctor")[1]
+            self.assertIn("orbitd hasn't loaded: fresh", out)
+        finally:
+            charon.stop()
+
     def test_capability_mismatch_between_machines(self):
         empty = self.root / "empty"
         empty.mkdir()
