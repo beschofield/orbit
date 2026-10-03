@@ -70,6 +70,13 @@ class ShellSnippetTest(unittest.TestCase):
         self.assertIn("st=0", self.bash('true; __orbit_prompt; echo "st=$?"').stdout)
         self.assertIn("st=3", self.bash('(exit 3); __orbit_prompt; echo "st=$?"').stdout)
 
+    def test_greet_uses_the_installed_orbit_even_when_path_is_stale(self):
+        local_bin = self.home / ".local" / "bin"
+        local_bin.mkdir(parents=True)
+        fake(local_bin, "orbit", f'echo "local $@" >> {self.calls}')
+        self.bash("echo ready", path="/usr/bin:/bin", tty=True)  # neither bin folder on PATH
+        self.assertEqual(self.calls.read_text().splitlines(), ["local greet"])
+
     def test_greet_is_skipped_when_stdout_is_not_a_terminal(self):
         self.bash("echo ready")  # capture_output: stdout is a pipe
         self.assertFalse(self.calls.exists())

@@ -41,6 +41,7 @@ to add a feature.
 2. **Nothing on the shell-prompt path runs Python.** The shell only reads `~/.orbit/prompt`.
 3. **Capabilities never touch the DB, the network or `~/.orbit`.** Input comes on stdin and output goes to stdout.
 4. **Events are never edited or deleted.** To undo something, emit a new event.
+   (Sole exception: `Store.forget_origin`, when the peer turns out to be a new installation.)
 5. **Order by `seq` or arrival, never `ts`.** The two machines' clocks can differ.
 6. **Every error message says where, what, and how to fix it.**
 7. **Small files with one job each** (under about 300 lines), type hints, and docstrings that say *why*.

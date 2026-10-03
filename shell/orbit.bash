@@ -3,7 +3,11 @@
 # The prompt hook only reads ~/.orbit/prompt (no Python runs), so it can't slow the shell down.
 if [[ $- == *i* ]]; then
   # Greet only when someone can see it (not in scp, pipes or scripts): showing a note marks it read.
-  [[ -t 1 ]] && command -v orbit >/dev/null 2>&1 && timeout 1 orbit greet 2>/dev/null
+  # Prefer the installed link, so a PATH without ~/.local/bin (first login) still greets.
+  __orbit_bin="$HOME/.local/bin/orbit"
+  [[ -x $__orbit_bin ]] || __orbit_bin=$(command -v orbit 2>/dev/null)
+  [[ -t 1 && -n $__orbit_bin ]] && timeout 1 "$__orbit_bin" greet 2>/dev/null
+  unset __orbit_bin
   __orbit_prompt() {
     local s=$? f="${ORBIT_DIR:-$HOME/.orbit}/prompt"  # keep $? for prompts that show it
     ORBIT_PS=""
