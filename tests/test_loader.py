@@ -89,6 +89,18 @@ class LoaderTest(unittest.TestCase):
         self.assertIn("exited with code 3", res.error)
         self.assertIn("kaboom", res.stderr)
 
+    def test_invalid_utf8_output_is_a_contract_error_not_a_crash(self):
+        d = write_cap(self.caps, "bytes", "#!/bin/sh\nprintf '\\377\\376 not utf8'; printf '\\377' >&2\n")
+        res = loader.execute(self.runtime().manifests[d.name], {}, 5)
+        self.assertIsNone(res.output)
+        self.assertTrue(res.error)
+
+    def test_unicode_round_trips(self):
+        write_cap(self.caps, "echo", py('print(json.dumps({"print": inp["trigger"]["args"][0]}, ensure_ascii=False))'))
+        res = loader.execute(self.runtime().manifests["echo"], {"trigger": {"args": ["💤 ♥ café"]}}, 5)
+        self.assertIsNone(res.error)
+        self.assertEqual(res.output.print_text, "💤 ♥ café")
+
     def test_debug_output_on_stdout_fails_with_the_fix(self):  # Review Focus #5
         write_cap(self.caps, "chatty", py('print("debug: hello")\nprint("{}")'))
         write_cap(self.caps, "calm", NOTHING)

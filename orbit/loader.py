@@ -95,7 +95,7 @@ def _text(value: object) -> str:
 def execute(m: Manifest, payload: dict, timeout: float, env: dict | None = None) -> RunResult:
     try:
         proc = subprocess.run([str(m.run)], input=json.dumps(payload, ensure_ascii=False), capture_output=True,
-                              text=True, timeout=timeout, cwd=m.dir, env=env)
+                              encoding="utf-8", errors="replace", timeout=timeout, cwd=m.dir, env=env)
     except subprocess.TimeoutExpired as e:
         return RunResult(None, f"{m.name}: timed out after {timeout:g}s — make it faster "
                                "(slow work belongs in a tick, which has its own timeout)", _text(e.stderr))
