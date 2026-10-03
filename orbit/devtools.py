@@ -164,9 +164,9 @@ def dev_peer(rt: loader.Runtime, args: list[str]) -> int:
         print(f"fake {rt.cfg.peer}: listening on 127.0.0.1:{config.DEV_PEER_PORT}, data in {d}. Ctrl-C stops it.")
         print(f'try, in another terminal:  orbit dev peer note "hi from the fake {rt.cfg.peer}"')
         if rt.cfg.peer_url != f"http://127.0.0.1:{config.DEV_PEER_PORT}":
-            print(f"note: this machine talks to {rt.cfg.peer_url}, not the fake peer. Point it here with "
-                  f"`orbit init --dev --force --me {rt.cfg.me} --peer {rt.cfg.peer}` "
-                  f"(and back later with `orbit init --force --me {rt.cfg.me} --peer {rt.cfg.peer}`)")
+            print(f"note: this machine talks to {rt.cfg.peer_url}, not the fake peer. Point a separate "
+                  f"test folder here with `export ORBIT_DIR=~/.orbit-dev` and then "
+                  f"`orbit init --dev --me {rt.cfg.me} --peer {rt.cfg.peer}` (unset ORBIT_DIR to go back)")
     sys.stdout.flush()
     env = {**os.environ, "ORBIT_DIR": str(d)}
     try:

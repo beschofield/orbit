@@ -14,6 +14,7 @@ import datetime as dt
 import json
 import sqlite3
 import threading
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -76,7 +77,11 @@ class Store:
         self._all: list[sqlite3.Connection] = []
         self._lock = threading.Lock()
         path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn().executescript(SCHEMA)
+        conn = self._conn()
+        conn.executescript(SCHEMA)
+        # A random id per database, so the peer can tell a reinstall (or a dev-mode
+        # database) from the machine it synced with before; see sync.pull_once.
+        conn.execute("INSERT OR IGNORE INTO meta (key, value) VALUES ('instance', ?)", (uuid.uuid4().hex,))
 
     def _conn(self) -> sqlite3.Connection:
         conn = getattr(self._local, "conn", None)
@@ -135,6 +140,23 @@ class Store:
             raise ValueError(f"keep must be one of {KEEPS}, got {keep!r}")
         return self._write(self._conn(), event, keep, _payload(event.data))
 
+    def forget_origin(self, origin: str) -> None:
+        """Drop every stored event from `origin`.
+
+        The one exception to "events are never deleted": it's used only when the peer
+        turns out to be a different installation (new instance id), so its old events
+        and seqs belong to a database that no longer exists and would block the new one's.
+        """
+        conn = self._conn()
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            conn.execute("DELETE FROM events WHERE origin = ?", (origin,))
+            conn.execute("DELETE FROM latest WHERE origin = ?", (origin,))
+            conn.execute("COMMIT")
+        except BaseException:
+            conn.execute("ROLLBACK")
+            raise
+
     def _write(self, conn: sqlite3.Connection, e: Event, keep: str, payload: str) -> bool:
         values = (e.origin, e.seq, e.type, e.ts, e.v, payload)
         if keep == "log":
@@ -183,6 +205,10 @@ class Store:
 
     def set_meta(self, key: str, value: str) -> None:
         self._conn().execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", (key, value))
+
+    def instance(self) -> str:
+        """This database's random id (made on first open)."""
+        return self.get_meta("instance") or ""
 
     def delete_meta(self, key: str) -> None:
         self._conn().execute("DELETE FROM meta WHERE key = ?", (key,))

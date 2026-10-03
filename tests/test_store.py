@@ -59,6 +59,23 @@ class StoreTest(unittest.TestCase):
         self.assertEqual([e.data["i"] for e in self.store.recent(["notes.sent"], limit=2)], [3, 4])
         self.assertEqual(self.store.recent([]), [])
 
+    def test_instance_id_is_made_once_and_kept(self):
+        first = self.store.instance()
+        self.assertRegex(first, r"^[0-9a-f]{32}$")
+        again = Store(self.path, "charon")
+        try:
+            self.assertEqual(again.instance(), first)
+        finally:
+            again.close()
+
+    def test_forget_origin_drops_only_that_machines_rows(self):
+        self.store.append("notes.sent", {"text": "mine"})
+        self.store.insert(Event("pluto", 1, "notes.sent", TS, 1, {"text": "old"}), "log")
+        self.store.insert(Event("pluto", 2, "presence.status", TS, 1, {"state": "idle"}), "latest")
+        self.store.forget_origin("pluto")
+        self.assertEqual([e.origin for e in self.store.recent(["notes.sent"])], ["charon"])
+        self.assertNotIn("pluto", self.store.latest_all())
+
     def test_rejects_oversized_data(self):
         with self.assertRaises(ValueError):
             self.store.append("notes.sent", {"text": "x" * 17000})

@@ -74,7 +74,8 @@ class Authorizer:
 
 
 def health(rt: loader.Runtime) -> dict:
-    return {"ok": True, "me": rt.cfg.me, "core_version": CORE_VERSION, "capabilities": sorted(rt.manifests)}
+    return {"ok": True, "me": rt.cfg.me, "core_version": CORE_VERSION, "capabilities": sorted(rt.manifests),
+            "instance": rt.store.instance()}
 
 
 def make_handler(rt: loader.Runtime, auth: Authorizer, poke: threading.Event):
@@ -111,7 +112,7 @@ def make_handler(rt: loader.Runtime, auth: Authorizer, poke: threading.Event):
                 rows = rt.store.own_after(after, limit + 1)
                 self._send(200, {"events": [{**e.to_dict(), "keep": keep} for e, keep in rows[:limit]],
                                  "has_more": len(rows) > limit, "core_version": CORE_VERSION,
-                                 "capabilities": sorted(rt.manifests)})
+                                 "capabilities": sorted(rt.manifests), "instance": rt.store.instance()})
             finally:
                 rt.store.release()
 

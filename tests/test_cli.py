@@ -1,9 +1,13 @@
+import io
+import os
 import tempfile
 import time
+from contextlib import redirect_stderr, redirect_stdout
+from unittest import mock
 import unittest
 from pathlib import Path
 
-from orbit import config
+from orbit import cli, config
 from orbit.store import Store
 from tests.helpers import py, run_cli, write_cap
 
@@ -112,3 +116,25 @@ class CliTest(unittest.TestCase):
         self.assertEqual(cfg.bind, "127.0.0.1")
         self.assertEqual(cfg.peer_url, "http://127.0.0.1:1979")
         self.assertEqual(cfg.dev_allow_ips, ["127.0.0.1"])
+
+    def init_with_home(self, env: dict) -> tuple[int, str]:
+        """Run `orbit init --dev` with HOME pointed at a temp folder (never the real one)."""
+        home = self.root / "home"
+        home.mkdir(exist_ok=True)
+        err = io.StringIO()
+        clean = {k: v for k, v in os.environ.items() if k != "ORBIT_DIR"}
+        with mock.patch.dict(os.environ, {**clean, "HOME": str(home), **env}, clear=True), \
+                redirect_stdout(io.StringIO()), redirect_stderr(err):
+            code = cli.main(["init", "--me", "charon", "--peer", "pluto", "--dev"])
+        return code, err.getvalue()
+
+    def test_init_dev_in_the_real_folder_warns_but_writes(self):
+        code, err = self.init_with_home({})
+        self.assertEqual(code, 0)
+        self.assertIn("ORBIT_DIR=~/.orbit-dev", err)
+        self.assertEqual(err.count("\n"), 1)
+        self.assertTrue((self.root / "home" / ".orbit" / "config.json").exists())
+
+    def test_init_dev_with_a_separate_orbit_dir_is_quiet(self):
+        code, err = self.init_with_home({"ORBIT_DIR": str(self.root / "home" / ".orbit-dev")})
+        self.assertEqual((code, err), (0, ""))

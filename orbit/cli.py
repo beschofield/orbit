@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
 from orbit import characters, config, loader, sync
@@ -140,6 +141,9 @@ def init(args: list[str]) -> int:
         return 1
     values: dict = {"me": a.me, "peer": a.peer, "port": a.port}
     if a.dev:
+        if directory.expanduser().resolve() == (Path.home() / ".orbit").resolve():
+            print(f"orbit: warning: dev mode is writing to the real {directory} — run "
+                  "`export ORBIT_DIR=~/.orbit-dev` first to keep test data out of it", file=sys.stderr)
         values.update(bind="127.0.0.1", peer_url=f"http://127.0.0.1:{config.DEV_PEER_PORT}",
                       dev_allow_ips=["127.0.0.1"])
     print(f"wrote {config.write(directory, values)}")

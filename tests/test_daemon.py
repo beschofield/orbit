@@ -95,6 +95,7 @@ class HttpTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body["me"], "charon")
         self.assertEqual(body["capabilities"], ["ping"])
+        self.assertRegex(body["instance"], r"^[0-9a-f]{32}$")
         self.assertEqual(get("http://127.0.0.1:19782/events?after=0")[0], 403)
         self.assertEqual(post("http://127.0.0.1:19782/poke"), 403)
 
@@ -107,6 +108,7 @@ class HttpTest(unittest.TestCase):
         self.assertEqual([e["seq"] for e in body["events"]], [1, 2])
         self.assertTrue(body["has_more"])
         self.assertEqual(body["events"][0]["keep"], "log")
+        self.assertEqual(body["instance"], d.rt.store.instance())
         self.assertEqual(get("http://127.0.0.1:19782/events?after=x")[0], 400)
         self.assertEqual(post("http://127.0.0.1:19782/poke"), 204)
         self.assertEqual(get("http://127.0.0.1:19782/nope")[0], 404)

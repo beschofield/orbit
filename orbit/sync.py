@@ -95,10 +95,17 @@ def pull_once(rt: loader.Runtime) -> bool:
     """Fetch everything new from the peer and dispatch `received`. True if the peer answered."""
     cfg, store = rt.cfg, rt.store
     received: list[Event] = []
+    forgot = False
     try:
         while True:
             after = store.peer_cursor()
             page = fetch_events(cfg.peer_url, after)
+            if new_installation(rt, page.get("instance")):
+                if forgot:
+                    raise PeerError(f"{cfg.peer_url} changed its instance id twice in one pull — "
+                                    "is more than one orbitd answering on that address?")
+                forgot = True
+                continue  # forgotten; re-ask from seq 0
             highest = after
             for raw in page["events"]:
                 seq = raw.get("seq") if isinstance(raw, dict) else None
@@ -126,6 +133,27 @@ def pull_once(rt: loader.Runtime) -> bool:
     store.delete_meta("last_pull_error")
     store.set_peer_status(True, now_iso())
     dispatch_received(rt, received)
+    return True
+
+
+def new_installation(rt: loader.Runtime, instance: object) -> bool:
+    """True (after forgetting the peer's old events) if the peer's database changed.
+
+    A reinstall, or a dev-mode database that once pretended to be the peer, restarts
+    seqs at 1; without this, the old cursor and (origin, seq) rows would hide the new
+    events. Peers that don't send an instance are never compared.
+    """
+    if not isinstance(instance, str) or not instance:
+        return False
+    store, peer = rt.store, rt.cfg.peer
+    known = store.get_meta("peer_instance")
+    store.set_meta("peer_instance", instance)
+    if not known or known == instance:
+        return False
+    log(rt.cfg.data_dir, "orbitd", f"peer {peer} is a new installation (instance changed) — "
+                                   "forgetting its old events and resyncing")
+    store.forget_origin(peer)
+    store.set_peer_cursor(0)
     return True
 
 

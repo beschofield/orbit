@@ -60,16 +60,21 @@ bin/orbit doctor                                     # config, daemon, peer, man
 
 ## Testing with two machines on one computer
 
+Use a separate data folder, so test notes, cursors and fake-pluto events never land in
+the real `~/.orbit` (they would confuse the real pluto on reveal day). Set it in every
+terminal you use for testing:
+
 ```bash
-bin/orbit init --dev --force --me charon --peer pluto  # point this machine at the fake peer
+export ORBIT_DIR=~/.orbit-dev                          # keeps test data out of the real ~/.orbit
+bin/orbit init --dev --me charon --peer pluto          # point this test folder at the fake peer
 bin/orbit daemon &                                     # this machine's daemon (or use systemd)
 bin/orbit dev peer                                     # fake pluto on 127.0.0.1:1979 (its own terminal)
 bin/orbit dev peer note "hi from fake pluto"           # run any command *as* the fake peer
 bin/orbit greet                                        # see it arrive
 ```
 
-The fake peer keeps its data in `~/.orbit-devpeer`. Switch back with
-`bin/orbit init --force --me charon --peer pluto`.
+The fake peer keeps its data in `~/.orbit-devpeer`. To go back to the real setup,
+`unset ORBIT_DIR`; `~/.orbit` was never touched.
 
 ## Data on disk
 

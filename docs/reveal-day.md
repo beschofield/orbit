@@ -13,9 +13,9 @@ Do these steps together with Gabby, after showing her the surprise.
    or push it to GitHub first as `beschofield/orbit` (private) and clone it there.
 4. **Install on pluto:** run `~/orbit/install.sh` and answer `pluto`, then run
    `loginctl enable-linger $USER`.
-5. **Switch charon from dev mode to the real thing:**
-   `orbit init --force --me charon --peer pluto`, then
-   `systemctl --user restart orbitd`.
+5. **Switch charon from dev mode to the real thing:** `unset ORBIT_DIR` (dev testing
+   used `ORBIT_DIR=~/.orbit-dev`, which keeps test data out of the real `~/.orbit`), then
+   `orbit init --force --me charon --peer pluto` and `systemctl --user restart orbitd`.
 6. **Check both machines.** `orbit doctor` should be all ✓ on each.
 7. **Send the first note** from charon, e.g. `orbit note "welcome to orbit ♥"`, and
    have Gabby open a new terminal.
