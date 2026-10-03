@@ -7,7 +7,7 @@
 ## 1. Purpose
 
 Two Linux machines on the same tailnet, **charon** (Becca's) and **pluto**
-(Gabby's, her partner), get a pair of terminal companions: ASCII Pluto and Charon.
+(Gabby's, Becca's girlfriend), get a pair of terminal companions: ASCII Pluto and Charon.
 Like Pluto and Charon in space, which are tidally locked and orbit a shared
 point between them, the two machines are equal peers sharing one small world.
 
@@ -143,7 +143,7 @@ capabilities/<name>/
   "contract": 1,
   "run": "main.py",
   "commands": [
-    {"name": "note", "usage": "note <text>", "help": "Send a note to your partner."},
+    {"name": "note", "usage": "note <text>", "help": "Send a note to your girlfriend."},
     {"name": "notes", "usage": "notes", "help": "Show recent notes."}
   ],
   "triggers": ["login", "received"],
@@ -350,7 +350,7 @@ PS1='${ORBIT_PS:+$ORBIT_PS }'"$PS1"
 - **Commands:** `note <text>` (emits `notes.sent {text}`), `notes` (prints the
   last 20 notes from both people).
 - **login:**
-  - The partner's character says each unread peer `notes.sent`, then the
+  - The girlfriend's character says each unread peer `notes.sent`, then the
     capability emits one `notes.seen {seqs}`.
   - The user's own character reports read receipts not yet shown ("Pluto read
     your note ♥"), then the capability emits `notes.receipts_shown {seqs}`.
@@ -370,7 +370,7 @@ PS1='${ORBIT_PS:+$ORBIT_PS }'"$PS1"
     state changes.
 - **prompt:**
   - `♇ pluto: active` on charon, or `☾ charon: idle` on pluto. The symbol
-    shows the partner.
+    shows the girlfriend.
   - `💤` when `peer.online` is false.
 
 ### 10.4 example
@@ -498,3 +498,34 @@ everything in under 30 s.
 - A local git repo at `~/Claude/orbit`, with commits authored as `beschofield`.
 - **Nothing is pushed before the reveal.** Afterwards it gets published as
   `github.com/beschofield/orbit` (private recommended).
+
+## 18. Implementation clarifications (added with the implementation plan)
+
+These pin down details that the sections above leave open. Where they differ,
+this section wins.
+
+- **Reserved command names:** `daemon`, `dev`, `doctor`, `greet`, `help`,
+  `init`. `orbit daemon` runs orbitd (systemd's `ExecStart`), and
+  `orbit init --me X --peer Y [--dev]` writes `config.json`.
+- **Extra config keys:** `peer_url` (default `http://<peer_host>:<port>`),
+  `bind` (default: `tailscale ip -4`) and `dev_allow_ips` (non-empty means
+  dev/test mode: trust these IPs instead of `tailscale whois`). `$ORBIT_DIR`
+  overrides `~/.orbit`.
+- **Wire format:** each event in a `GET /events` response carries an extra
+  `"keep"` field, so the receiving machine stores it in the right table even
+  without the capability installed.
+- **Open `/health`:** `/health` needs no auth and returns
+  `{ok, me, core_version, capabilities}`. That makes it usable by
+  `orbit doctor` on both machines.
+- **Event order:** `input.events` is ordered by **arrival on this machine**
+  (local row id), not `ts`, so clock skew can't reorder or drop events.
+- **Empty output:** an empty stdout is treated as `{}`.
+- **Test cases:** `input` is merged over defaults (`me` charon, `peer` pluto
+  online, `now` 2026-10-03T14:00:00Z, empty `events`/`latest`). Cases run with
+  `TZ=UTC`. `expect` compares only the keys it lists.
+- **Dev peer:** `orbit dev peer` runs a fake peer with data in
+  `~/.orbit-devpeer` on 127.0.0.1:1979. `orbit dev peer <command...>` runs a
+  command *as* that fake peer. `orbit init --dev` points this machine at it.
+- **Extra files:** `bin/orbit` (launcher), `shell/orbit.bash` (the bashrc
+  block), `orbit/prompt.py`, `orbit/log.py`, `orbit/devtools.py`,
+  `orbit/doctor.py`.
