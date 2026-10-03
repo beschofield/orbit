@@ -15,6 +15,7 @@ class StoreTest(unittest.TestCase):
         self.store = Store(self.path, "charon")
 
     def tearDown(self):
+        self.store.close()
         self.tmp.cleanup()
 
     def test_append_assigns_increasing_seq_and_origin(self):
@@ -80,11 +81,20 @@ class StoreTest(unittest.TestCase):
         def work(store):
             for _ in range(25):
                 store.append("notes.sent", {})
+            store.close()
 
         threads = [threading.Thread(target=work, args=(s,)) for s in (self.store, other, self.store, other)]
         for t in threads:
             t.start()
         for t in threads:
             t.join()
+        other.close()  # close other's main thread connection
         seqs = sorted(e.seq for e, _ in self.store.own_after(0, 500))
         self.assertEqual(seqs, list(range(1, 101)))
+
+    def test_close_is_idempotent_and_store_reopens(self):
+        self.store.append("notes.sent", {"text": "a"})
+        self.store.close()
+        self.store.close()  # should be safe to call twice
+        b = self.store.append("notes.sent", {"text": "b"})
+        self.assertEqual(b.seq, 2)  # reopened and continues seq

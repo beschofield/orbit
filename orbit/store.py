@@ -85,6 +85,13 @@ class Store:
             self._local.conn = conn
         return conn
 
+    def close(self) -> None:
+        """Close this thread's connection. Safe to call twice."""
+        conn = getattr(self._local, "conn", None)
+        if conn is not None:
+            conn.close()
+            self._local.conn = None
+
     # ---- writing ----
 
     def append(self, type: str, data: dict, keep: str = "log", v: int = 1) -> Event:
