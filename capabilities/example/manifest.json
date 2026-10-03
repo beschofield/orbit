@@ -1,0 +1,11 @@
+{
+  "name": "example",
+  "description": "A tiny, heavily commented template. Copy this folder to start a new capability.",
+  "contract": 1,
+  "run": "main.py",
+  "commands": [{"name": "hello", "usage": "hello [name]", "help": "Say hello (the example capability)."}],
+  "triggers": [],
+  "tick_seconds": null,
+  "event_types": {},
+  "receives": []
+}

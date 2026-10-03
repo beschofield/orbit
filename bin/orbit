@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Launcher so `orbit` works from anywhere. install.sh symlinks this into ~/.local/bin.
+ORBIT_REPO="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+export PYTHONPATH="$ORBIT_REPO${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m orbit.cli "$@"

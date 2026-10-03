@@ -1,0 +1,5 @@
+{
+  "description": "with no name, it greets a friend",
+  "input": {"trigger": {"kind": "command", "name": "hello", "args": []}},
+  "expect": {"print": "hello, friend!"}
+}

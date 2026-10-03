@@ -1,0 +1,9 @@
+{
+  "description": "orbit hello Gabby greets Gabby",
+  "input": {"trigger": {"kind": "command", "name": "hello", "args": ["Gabby"]}},
+  "expect": {
+    "print": "hello, Gabby!",
+    "say": [{"who": "charon", "mood": "happy", "text": "Hi Gabby! I'm a brand-new capability."}],
+    "emit": []
+  }
+}

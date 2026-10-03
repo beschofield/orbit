@@ -1,10 +1,14 @@
 """Shared test helpers. Run tests from the repo root: python3 -m unittest"""
 from __future__ import annotations
 
+import io
 import json
+import os
 import textwrap
 import time
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 from orbit import config
 
@@ -52,3 +56,16 @@ def make_runtime(data_dir: Path, caps_dir: Path, **extra):
     """A loader.Runtime over a temporary data dir and capabilities folder."""
     from orbit import loader
     return loader.open_runtime(make_cfg(data_dir, caps_dir=caps_dir, **extra))
+
+
+def run_cli(data_dir: Path, *args: str) -> tuple[int, str, str]:
+    """Run `orbit <args>` in-process against data_dir. Returns (exit code, stdout, stderr)."""
+    from orbit import cli
+    out, err = io.StringIO(), io.StringIO()
+    with mock.patch.dict(os.environ, {"ORBIT_DIR": str(data_dir), "NO_COLOR": "1"}), \
+            redirect_stdout(out), redirect_stderr(err):
+        try:
+            code = cli.main(list(args))
+        except SystemExit as e:
+            code = e.code if isinstance(e.code, int) else 1
+    return code, out.getvalue(), err.getvalue()
