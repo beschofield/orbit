@@ -1,0 +1,11 @@
+{
+  "name": "ping",
+  "description": "Test fixture: orbit ping emits ping.sent; the other machine's prompt counts them.",
+  "contract": 1,
+  "run": "main.py",
+  "commands": [{"name": "ping", "usage": "ping", "help": "Send a ping (test fixture)."}],
+  "triggers": ["received"],
+  "tick_seconds": null,
+  "event_types": {"ping.sent": {"keep": "log"}},
+  "receives": ["ping.sent"]
+}

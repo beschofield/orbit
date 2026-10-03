@@ -105,3 +105,34 @@ class FakePeer:
     def close(self) -> None:
         self.server.shutdown()
         self.server.server_close()
+
+
+FIXTURE_CAPS = REPO / "tests" / "fixtures" / "capabilities"
+
+
+class Machine:
+    """One pretend machine for integration tests: its own data dir, config file and daemon on loopback."""
+
+    def __init__(self, root: Path, me: str, peer: str, port: int, peer_port: int, caps_dir: Path):
+        self.dir = root / me
+        config.write(self.dir, {"me": me, "peer": peer, "port": port, "bind": "127.0.0.1",
+                                "peer_url": f"http://127.0.0.1:{peer_port}", "dev_allow_ips": ["127.0.0.1"],
+                                "capabilities_dir": str(caps_dir)})
+        self.daemon = None
+
+    def start(self) -> None:
+        from orbit import daemon, loader
+        self.daemon = daemon.Daemon(loader.open_runtime(config.load(self.dir)))
+        self.daemon.start("127.0.0.1")
+
+    def stop(self) -> None:
+        if self.daemon:
+            self.daemon.close()
+            self.daemon = None
+
+    def cli(self, *args: str) -> tuple[int, str, str]:
+        return run_cli(self.dir, *args)
+
+    def prompt(self) -> str:
+        path = self.dir / "prompt"
+        return path.read_text(encoding="utf-8") if path.exists() else ""

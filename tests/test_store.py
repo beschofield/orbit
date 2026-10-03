@@ -113,3 +113,18 @@ class StoreTest(unittest.TestCase):
         # verify store still works after close
         b = self.store.append("notes.sent", {"text": "test"})
         self.assertEqual(b.seq, 4)
+
+    def test_release_closes_only_the_calling_threads_connection(self):
+        def worker():
+            self.store.append("notes.sent", {})
+            self.store.release()
+
+        t = threading.Thread(target=worker)
+        t.start()
+        t.join()
+        self.assertEqual(len(self.store._all), 1)  # only the main thread's connection remains
+        self.assertEqual(self.store.append("notes.sent", {}).seq, 2)
+        self.store.release()
+        self.store.release()  # releasing twice is harmless
+        self.assertEqual(self.store._all, [])
+        self.assertEqual(self.store.append("notes.sent", {}).seq, 3)  # reopens on demand

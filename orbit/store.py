@@ -97,6 +97,17 @@ class Store:
             conn.close()
         self._local = threading.local()
 
+    def release(self) -> None:
+        """Close the calling thread's connection, if any. Per-request threads call this so connections don't pile up."""
+        conn = getattr(self._local, "conn", None)
+        if conn is None:
+            return
+        self._local.conn = None
+        with self._lock:
+            if conn in self._all:
+                self._all.remove(conn)
+        conn.close()
+
     # ---- writing ----
 
     def append(self, type: str, data: dict, keep: str = "log", v: int = 1) -> Event:
