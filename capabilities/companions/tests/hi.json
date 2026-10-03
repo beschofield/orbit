@@ -1,0 +1,5 @@
+{
+  "description": "orbit hi gets a line from the hi list",
+  "input": {"trigger": {"kind": "command", "name": "hi", "args": []}},
+  "expect": {"say": [{"who": "charon", "mood": "happy", "text": "Hi! I'm right here."}], "emit": []}
+}

@@ -1,0 +1,8 @@
+{
+  "morning": ["Good morning! ☀", "Rise and shine!", "Morning! Coffee first?"],
+  "afternoon": ["Good afternoon! How's it going?", "Afternoon! Remember to drink water.", "Hi again! Halfway through the day."],
+  "evening": ["Good evening! Long day?", "Evening! Time to wind down.", "Hey, you made it to the evening!"],
+  "night": ["It's late... don't stay up too long.", "Night owl mode activated.", "Shh, everyone's asleep. Just us."],
+  "hi": ["Hi! I'm right here.", "Hello hello!", "{peer} says hi too, probably.", "Still orbiting, as usual."],
+  "peer_asleep": ["{peer}'s asleep. I'll keep watch.", "{peer} is offline right now, but notes will wait."]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "late at night with Pluto offline: sleepy greeting plus a keep-watch line",
+  "input": {
+    "trigger": {"kind": "login"},
+    "now": "2026-10-03T23:01:00Z",
+    "peer": {"name": "pluto", "online": false, "last_seen": null}
+  },
+  "expect": {"say": [
+    {"who": "charon", "mood": "sleepy", "text": "Night owl mode activated."},
+    {"who": "charon", "mood": "neutral", "text": "Pluto is offline right now, but notes will wait."}
+  ]}
+}

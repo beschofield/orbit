@@ -1,0 +1,5 @@
+{
+  "description": "14:00 UTC is afternoon; minute 00 picks the first line",
+  "input": {"trigger": {"kind": "login"}},
+  "expect": {"say": [{"who": "charon", "mood": "happy", "text": "Good afternoon! How's it going?"}]}
+}

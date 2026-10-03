@@ -1,0 +1,11 @@
+{
+  "name": "companions",
+  "description": "Pluto and Charon say hello at login and whenever you run orbit hi.",
+  "contract": 1,
+  "run": "main.py",
+  "commands": [{"name": "hi", "usage": "hi", "help": "Say hi to your character."}],
+  "triggers": ["login"],
+  "tick_seconds": null,
+  "event_types": {},
+  "receives": []
+}
