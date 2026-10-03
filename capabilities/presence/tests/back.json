@@ -1,0 +1,8 @@
+{
+  "description": "orbit back returns to automatic presence",
+  "input": {"trigger": {"kind": "command", "name": "back", "args": []}},
+  "expect": {
+    "emit": [{"type": "presence.status", "data": {"state": "active", "manual": false}, "v": 1}],
+    "print": "Welcome back!"
+  }
+}

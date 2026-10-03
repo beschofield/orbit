@@ -1,0 +1,8 @@
+{
+  "description": "Pluto's latest status shows in Charon's prompt",
+  "input": {
+    "trigger": {"kind": "received", "events": []},
+    "latest": {"charon": {}, "pluto": {"presence.status": {"origin": "pluto", "seq": 3, "type": "presence.status", "ts": "2026-10-03T13:59:00Z", "v": 1, "data": {"state": "idle", "manual": false}}}}
+  },
+  "expect": {"prompt": "♇ pluto: idle", "emit": []}
+}

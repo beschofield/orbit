@@ -1,0 +1,9 @@
+{
+  "description": "peer offline shows asleep; a manual away isn't overwritten by the tick",
+  "input": {
+    "trigger": {"kind": "tick"},
+    "peer": {"name": "pluto", "online": false, "last_seen": "2026-10-03T10:00:00Z"},
+    "latest": {"charon": {"presence.status": {"origin": "charon", "seq": 8, "type": "presence.status", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"state": "away", "manual": true}}}, "pluto": {}}
+  },
+  "expect": {"prompt": "♇ pluto: 💤", "emit": []}
+}

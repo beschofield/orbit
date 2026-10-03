@@ -1,0 +1,5 @@
+{
+  "description": "before Pluto has reported anything, just the symbol and name",
+  "input": {"trigger": {"kind": "received", "events": []}},
+  "expect": {"prompt": "♇ pluto"}
+}

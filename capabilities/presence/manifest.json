@@ -1,0 +1,14 @@
+{
+  "name": "presence",
+  "description": "Shows your girlfriend's state (active, idle, away, asleep) in your prompt.",
+  "contract": 1,
+  "run": "main.py",
+  "commands": [
+    {"name": "away", "usage": "away [message]", "help": "Mark yourself away, with an optional short message."},
+    {"name": "back", "usage": "back", "help": "Clear away; go back to automatic presence."}
+  ],
+  "triggers": ["tick", "received"],
+  "tick_seconds": 60,
+  "event_types": {"presence.status": {"keep": "latest"}},
+  "receives": ["presence.status"]
+}

@@ -1,0 +1,8 @@
+{
+  "description": "orbit away lunch sets a manual away with a message",
+  "input": {"trigger": {"kind": "command", "name": "away", "args": ["lunch"]}},
+  "expect": {
+    "emit": [{"type": "presence.status", "data": {"state": "away", "manual": true, "message": "lunch"}, "v": 1}],
+    "print": "You're away: lunch. Run `orbit back` when you return."
+  }
+}
