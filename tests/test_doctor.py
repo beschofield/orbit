@@ -71,6 +71,15 @@ class DoctorTest(unittest.TestCase):
         finally:
             charon.stop()
 
+    def test_peer_url_pointing_at_the_wrong_machine(self):
+        charon = Machine(self.root, "charon", "pluto", 19780, 19780, FIXTURE_CAPS)  # peer_url points at itself
+        charon.start()
+        try:
+            out = charon.cli("doctor")[1]
+            self.assertIn("✗ peer_url points at charon, expected pluto", out)
+        finally:
+            charon.stop()
+
     def test_capability_mismatch_between_machines(self):
         empty = self.root / "empty"
         empty.mkdir()

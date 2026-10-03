@@ -27,6 +27,21 @@ class AuthorizerTest(unittest.TestCase):
         self.assertFalse(auth.allowed("100.2.2.2"))
         self.assertEqual(self.calls, ["100.1.1.1", "100.2.2.2"])
 
+    def test_failed_whois_is_retried_after_ten_seconds(self):
+        now = [1000.0]
+        auth = daemon.Authorizer(make_cfg(Path("/tmp")), whois=self.whois, clock=lambda: now[0])
+        self.assertFalse(auth.allowed("100.9.9.9"))
+        now[0] += 9
+        self.assertFalse(auth.allowed("100.9.9.9"))
+        self.assertEqual(self.calls, ["100.9.9.9"])
+        now[0] += 2
+        auth.allowed("100.9.9.9")
+        self.assertEqual(self.calls, ["100.9.9.9", "100.9.9.9"])
+        auth.allowed("100.1.1.1")
+        now[0] += 200  # a successful lookup still lasts WHOIS_TTL
+        auth.allowed("100.1.1.1")
+        self.assertEqual(self.calls.count("100.1.1.1"), 1)
+
     def test_fqdn_peer_host_matches_short_name(self):
         auth = daemon.Authorizer(make_cfg(Path("/tmp"), peer_host="pluto.tail123.ts.net"), whois=self.whois)
         self.assertTrue(auth.allowed("100.1.1.1"))

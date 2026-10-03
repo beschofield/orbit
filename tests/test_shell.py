@@ -94,27 +94,57 @@ class ShellSnippetTest(unittest.TestCase):
 
 
 class InstallTest(unittest.TestCase):
+    """Runs install.sh against a temporary HOME with fake tailscale and systemctl."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.home = self.root / "home"
+        (self.home / ".orbit").mkdir(parents=True)
+        (self.home / ".orbit" / "config.json").write_text('{"me": "charon", "peer": "pluto"}')
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        self.systemctl_log = self.root / "systemctl.log"
+        fake(self.bin, "tailscale", "exit 0")
+        fake(self.bin, "systemctl", f'echo "$@" >> {self.systemctl_log}')
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def install(self) -> subprocess.CompletedProcess:
+        env = {"HOME": str(self.home), "PATH": f"{self.bin}:/usr/bin:/bin", "USER": "becca"}
+        return subprocess.run(["bash", str(REPO / "install.sh")], env=env, capture_output=True,
+                              text=True, timeout=30, stdin=subprocess.DEVNULL)
+
+    def test_symlinked_bashrc_stays_a_symlink(self):
+        dotfiles = self.root / "dotfiles"
+        dotfiles.mkdir()
+        (dotfiles / "bashrc").write_text("alias ll='ls -l'\n")
+        (self.home / ".bashrc").symlink_to(dotfiles / "bashrc")
+        for _ in range(2):
+            self.assertEqual(self.install().returncode, 0)
+        self.assertTrue((self.home / ".bashrc").is_symlink())
+        self.assertEqual((dotfiles / "bashrc").read_text().count("# >>> orbit >>>"), 1)
+
+    def test_half_a_block_is_left_alone_with_an_error(self):
+        broken = "alias ll='ls -l'\n# >>> orbit >>>\nimportant stuff\n"
+        (self.home / ".bashrc").write_text(broken)
+        r = self.install()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("by hand", r.stderr)
+        self.assertEqual((self.home / ".bashrc").read_text(), broken)
+        self.assertFalse((self.home / ".local").exists())  # stopped before changing anything
+
     def test_install_twice_is_idempotent(self):  # Review Focus #2
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            home = root / "home"
-            (home / ".orbit").mkdir(parents=True)
-            (home / ".orbit" / "config.json").write_text('{"me": "charon", "peer": "pluto"}')
-            (home / ".bashrc").write_text("alias ll='ls -l'\n")
-            bin_dir = root / "bin"
-            bin_dir.mkdir()
-            log = root / "systemctl.log"
-            fake(bin_dir, "tailscale", "exit 0")
-            fake(bin_dir, "systemctl", f'echo "$@" >> {log}')
-            env = {"HOME": str(home), "PATH": f"{bin_dir}:/usr/bin:/bin", "USER": "becca"}
-            for _ in range(2):
-                r = subprocess.run(["bash", str(REPO / "install.sh")], env=env, capture_output=True,
-                                   text=True, timeout=30, stdin=subprocess.DEVNULL)
-                self.assertEqual(r.returncode, 0, r.stderr)
-            bashrc = (home / ".bashrc").read_text()
-            self.assertEqual(bashrc.count("# >>> orbit >>>"), 1)
-            self.assertIn("alias ll='ls -l'", bashrc)
-            self.assertEqual((home / ".local" / "bin" / "orbit").resolve(), (REPO / "bin" / "orbit").resolve())
-            self.assertTrue((home / ".config" / "systemd" / "user" / "orbitd.service").is_file())
-            self.assertIn("--user enable --now orbitd.service", log.read_text())
-            self.assertIn("loginctl enable-linger", r.stdout)
+        home, log = self.home, self.systemctl_log
+        (home / ".bashrc").write_text("alias ll='ls -l'\n")
+        for _ in range(2):
+            r = self.install()
+            self.assertEqual(r.returncode, 0, r.stderr)
+        bashrc = (home / ".bashrc").read_text()
+        self.assertEqual(bashrc.count("# >>> orbit >>>"), 1)
+        self.assertIn("alias ll='ls -l'", bashrc)
+        self.assertEqual((home / ".local" / "bin" / "orbit").resolve(), (REPO / "bin" / "orbit").resolve())
+        self.assertTrue((home / ".config" / "systemd" / "user" / "orbitd.service").is_file())
+        self.assertIn("--user enable --now orbitd.service", log.read_text())
+        self.assertIn("loginctl enable-linger", r.stdout)

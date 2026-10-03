@@ -43,6 +43,7 @@ class RunResult:
     output: Output | None
     error: str | None = None
     stderr: str = ""
+    timed_out: bool = False
 
 
 def open_runtime(cfg: Config) -> Runtime:
@@ -60,6 +61,8 @@ def discover(cap_dir: Path) -> tuple[dict[str, Manifest], list[str]]:
             manifests[d.name] = parse_manifest(d / "manifest.json")
         except ContractError as e:
             problems.extend(e.problems)
+        except Exception as e:  # e.g. a manifest that isn't UTF-8: one bad folder mustn't hide the rest
+            problems.append(f"{d}/manifest.json: could not read ({type(e).__name__}: {e}) — fix the file")
     owners: dict[str, list[str]] = {}
     for m in manifests.values():
         for c in m.commands:
@@ -117,7 +120,7 @@ def execute(m: Manifest, payload: dict, timeout: float, env: dict | None = None)
                               encoding="utf-8", errors="replace", timeout=timeout, cwd=m.dir, env=env)
     except subprocess.TimeoutExpired as e:
         return RunResult(None, f"{m.name}: timed out after {timeout:g}s — make it faster "
-                               "(slow work belongs in a tick, which has its own timeout)", _text(e.stderr))
+                               "(slow work belongs in a tick, which has its own timeout)", _text(e.stderr), True)
     except OSError as e:
         return RunResult(None, f"{m.name}: could not start {m.run}: {e} — check the shebang line and chmod +x")
     if proc.returncode != 0:
@@ -138,7 +141,11 @@ def run(rt: Runtime, m: Manifest, trigger: dict) -> RunResult:
         log(rt.cfg.data_dir, m.name, f"stderr ({kind}): {res.stderr.strip()}")
     if res.output is None:
         log(rt.cfg.data_dir, m.name, f"FAILED ({kind}): {res.error}")
-        _record_failure(rt, m)
+        if kind == "login" and res.timed_out:
+            # 0.8 s is tight and a busy machine can miss it; that isn't the capability's fault.
+            log(rt.cfg.data_dir, m.name, "(login timeouts don't count toward disabling)")
+        else:
+            _record_failure(rt, m)
     else:
         rt.store.delete_meta(f"fail:{m.name}")
     return res

@@ -7,6 +7,11 @@ DATA="${ORBIT_DIR:-$HOME/.orbit}"
 python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null || {
   echo "Orbit needs Python 3.11 or newer (found: $(python3 --version 2>&1))" >&2; exit 1; }
 command -v tailscale >/dev/null || { echo "Orbit needs Tailscale, but 'tailscale' isn't on PATH" >&2; exit 1; }
+if grep -q '^# >>> orbit >>>$' "$HOME/.bashrc" 2>/dev/null && ! grep -q '^# <<< orbit <<<$' "$HOME/.bashrc"; then
+  echo "~/.bashrc has '# >>> orbit >>>' but no '# <<< orbit <<<' line, so Orbit won't guess what to remove." >&2
+  echo "Fix ~/.bashrc by hand (delete the old orbit block, or add the end marker), then run install.sh again." >&2
+  exit 1
+fi
 
 if [[ ! -f $DATA/config.json ]]; then
   read -rp "Which machine is this? (pluto/charon): " ME
@@ -30,7 +35,10 @@ else
 fi
 
 touch "$HOME/.bashrc"
-sed -i '/^# >>> orbit >>>$/,/^# <<< orbit <<<$/d' "$HOME/.bashrc"
+if grep -q '^# >>> orbit >>>$' "$HOME/.bashrc"; then
+  # --follow-symlinks: edit a dotfiles-managed ~/.bashrc in place instead of replacing the link
+  sed -i --follow-symlinks '/^# >>> orbit >>>$/,/^# <<< orbit <<<$/d' "$HOME/.bashrc"
+fi
 cat "$REPO/shell/orbit.bash" >> "$HOME/.bashrc"
 
 case ":$PATH:" in

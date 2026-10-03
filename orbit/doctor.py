@@ -59,6 +59,10 @@ def checks(rt: loader.Runtime) -> Iterator[tuple[bool, str]]:
         yield False, (f"{cfg.peer} is not answering at {cfg.peer_url} (fine if it's switched off; otherwise check "
                       f"orbitd there and that the tailnet allows port {cfg.port})")
         return
+    if theirs.get("me") != cfg.peer:
+        yield False, (f"peer_url points at {theirs.get('me')}, expected {cfg.peer} — fix peer_url (or peer_host) "
+                      f"in {cfg.data_dir}/config.json")
+        return
     yield True, f"{cfg.peer} is up (core {theirs.get('core_version')})"
     if theirs.get("core_version") != CORE_VERSION:
         yield False, (f"core versions differ: {cfg.me} has {CORE_VERSION}, {cfg.peer} has "

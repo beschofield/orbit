@@ -71,3 +71,18 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(len(lines), 2)
         self.assertTrue(lines[1].endswith(" second"))
         log(Path("/proc/not/writable"), "x", "ignored")  # must not raise
+
+    def test_big_log_is_rotated_to_dot_1(self):
+        logs = self.dir / "logs"
+        logs.mkdir(parents=True)
+        (logs / "notes.log.1").write_text("ancient\n")
+        (logs / "notes.log").write_text("x" * 1_000_001)
+        log(self.dir, "notes", "fresh")
+        self.assertTrue((logs / "notes.log").read_text().endswith(" fresh\n"))
+        self.assertEqual(len((logs / "notes.log").read_text().splitlines()), 1)
+        self.assertEqual((logs / "notes.log.1").stat().st_size, 1_000_001)
+
+    def test_small_log_is_not_rotated(self):
+        log(self.dir, "notes", "one")
+        log(self.dir, "notes", "two")
+        self.assertFalse((self.dir / "logs" / "notes.log.1").exists())

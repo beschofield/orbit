@@ -1,8 +1,10 @@
+import http.client
 import json
 import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from orbit import sync
 from tests.helpers import FakePeer, make_cfg, make_runtime, py, write_cap
@@ -120,6 +122,12 @@ class SyncTest(unittest.TestCase):
         self.assertFalse(sync.pull_once(self.rt))
         self.assertFalse(self.rt.store.peer_status()["online"])
         self.assertIn("isn't JSON", self.log_text())
+
+    def test_non_http_peer_is_offline_not_a_crash(self):
+        with mock.patch("urllib.request.urlopen", side_effect=http.client.BadStatusLine("garbage")):
+            self.assertFalse(sync.pull_once(self.rt))
+        self.assertFalse(self.rt.store.peer_status()["online"])
+        self.assertIn("isn't HTTP", self.log_text())
 
     def test_403_is_offline_with_a_hint(self):  # Review Focus #4
         self.responses = [(403, b'{"error": "not the configured peer"}')]

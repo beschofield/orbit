@@ -146,7 +146,8 @@ output to stderr**, which goes to `~/.orbit/logs/<name>.log`.
 If the program exits non-zero, times out, or prints output that breaks these rules, the
 core skips it, logs the reason and the fix to `~/.orbit/logs/<name>.log`, and moves on.
 After 5 failures in a row the capability is disabled until a file in its folder changes
-or someone runs `orbit doctor --reset <name>`.
+or someone runs `orbit doctor --reset <name>`. A `login` timeout is logged but doesn't count
+toward that, because the 0.8 s budget can be missed by a busy machine.
 
 ## Tests
 

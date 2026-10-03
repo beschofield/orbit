@@ -42,6 +42,25 @@ class LoaderTest(unittest.TestCase):
         self.assertEqual(list(rt.manifests), ["good"])
         self.assertTrue(any('event_types."oops"' in p for p in rt.problems), rt.problems)
 
+    def test_unreadable_manifest_is_a_problem_not_a_crash(self):
+        write_cap(self.caps, "good", NOTHING)
+        d = write_cap(self.caps, "garbled", NOTHING)
+        (d / "manifest.json").write_bytes(b'{"name": "\xff\xfe"}')
+        rt = self.runtime()
+        self.assertEqual(list(rt.manifests), ["good"])
+        self.assertTrue(any(p.startswith(f"{d}/manifest.json: could not read (UnicodeDecodeError")
+                            and p.endswith("fix the file") for p in rt.problems), rt.problems)
+
+    def test_login_timeouts_are_logged_but_never_disable(self):
+        write_cap(self.caps, "slow", py('time.sleep(2)\nprint("{}")'), triggers=["login"])
+        rt = self.runtime()
+        m = rt.manifests["slow"]
+        for _ in range(loader.MAX_FAILURES):
+            self.assertIn("timed out", loader.run(rt, m, {"kind": "login"}).error)
+        self.assertFalse(loader.is_disabled(rt, m))
+        self.assertIsNone(rt.store.get_meta("fail:slow"))
+        self.assertIn("timed out", self.log_text("slow"))
+
     def test_missing_capabilities_dir_is_a_problem(self):
         rt = self.track(make_runtime(self.data, self.caps / "nope"))
         self.assertEqual(rt.manifests, {})

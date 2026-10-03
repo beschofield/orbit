@@ -8,6 +8,7 @@ them so one bad event can't block sync forever.
 """
 from __future__ import annotations
 
+import http.client
 import json
 import urllib.error
 import urllib.request
@@ -58,6 +59,9 @@ def fetch_events(peer_url: str, after: int, limit: int = PAGE, timeout: float = 
         raise PeerError(f"peer answered HTTP {e.code}{hint}") from None
     except (urllib.error.URLError, OSError) as e:
         raise PeerError(f"peer unreachable at {peer_url}: {getattr(e, 'reason', e)}") from None
+    except http.client.HTTPException:
+        raise PeerError(f"peer at {peer_url} spoke something that isn't HTTP — "
+                        "is something else on that port?") from None
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise PeerError(f"{peer_url} sent something that isn't JSON — is something other than orbitd "
                         "listening on that port?") from None

@@ -21,6 +21,7 @@ from orbit.config import Config
 from orbit.log import log
 
 WHOIS_TTL = 300.0
+NEGATIVE_TTL = 10.0  # a failed whois (e.g. tailscaled restarting) is retried soon, not in 5 minutes
 RESCAN_SECONDS = 30.0  # how often orbitd looks for new or changed capabilities
 
 
@@ -65,7 +66,7 @@ class Authorizer:
             return ip in self.cfg.dev_allow_ips
         with self.lock:
             hit = self.cache.get(ip)
-        if hit and self.clock() - hit[0] < WHOIS_TTL:
+        if hit and self.clock() - hit[0] < (WHOIS_TTL if hit[1] is not None else NEGATIVE_TTL):
             name = hit[1]
         else:
             name = self.whois(ip)
