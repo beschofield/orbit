@@ -9,9 +9,11 @@ from __future__ import annotations
 import copy
 import json
 import os
+import subprocess
 import sys
+from pathlib import Path
 
-from orbit import characters, contract, loader
+from orbit import characters, config, contract, loader
 from orbit.contract import Manifest
 
 USAGE = """usage:
@@ -35,6 +37,8 @@ def main(rt: loader.Runtime, args: list[str]) -> int:
         return dev_run(rt, rest)
     if sub == "test":
         return dev_test(rt, rest)
+    if sub == "peer":
+        return dev_peer(rt, rest)
     print(USAGE, file=sys.stderr)
     return 2
 
@@ -142,3 +146,31 @@ def dev_test(rt: loader.Runtime, names: list[str]) -> int:
     for p in rt.problems:
         print(f"✗ {p}")
     return 1 if failed or rt.problems else 0
+
+
+def devpeer_dir() -> Path:
+    env = os.environ.get("ORBIT_DEVPEER_DIR")
+    return Path(env) if env else Path.home() / ".orbit-devpeer"
+
+
+def dev_peer(rt: loader.Runtime, args: list[str]) -> int:
+    """With no args: run a fake peer daemon on loopback. With args: run `orbit <args>` as that peer."""
+    d = devpeer_dir()
+    if not (d / "config.json").exists():
+        config.write(d, {"me": rt.cfg.peer, "peer": rt.cfg.me, "port": config.DEV_PEER_PORT, "bind": "127.0.0.1",
+                         "peer_url": f"http://127.0.0.1:{rt.cfg.port}", "dev_allow_ips": ["127.0.0.1"],
+                         "capabilities_dir": str(rt.cfg.capabilities_dir)})
+    if not args:
+        print(f"fake {rt.cfg.peer}: listening on 127.0.0.1:{config.DEV_PEER_PORT}, data in {d}. Ctrl-C stops it.")
+        print(f'try, in another terminal:  orbit dev peer note "hi from the fake {rt.cfg.peer}"')
+        if rt.cfg.peer_url != f"http://127.0.0.1:{config.DEV_PEER_PORT}":
+            print(f"note: this machine talks to {rt.cfg.peer_url}, not the fake peer. Point it here with "
+                  f"`orbit init --dev --force --me {rt.cfg.me} --peer {rt.cfg.peer}` "
+                  f"(and back later with `orbit init --force --me {rt.cfg.me} --peer {rt.cfg.peer}`)")
+    sys.stdout.flush()
+    env = {**os.environ, "ORBIT_DIR": str(d)}
+    try:
+        return subprocess.call([sys.executable, "-m", "orbit.cli", *(args or ["daemon"])],
+                               env=env, cwd=config.REPO_ROOT)
+    except KeyboardInterrupt:
+        return 0
