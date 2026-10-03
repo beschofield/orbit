@@ -5,8 +5,10 @@ import io
 import json
 import os
 import textwrap
+import threading
 import time
 from contextlib import redirect_stderr, redirect_stdout
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 
@@ -69,3 +71,37 @@ def run_cli(data_dir: Path, *args: str) -> tuple[int, str, str]:
         except SystemExit as e:
             code = e.code if isinstance(e.code, int) else 1
     return code, out.getvalue(), err.getvalue()
+
+
+class FakePeer:
+    """A tiny HTTP server on a random loopback port that answers with canned responses."""
+
+    def __init__(self, respond):
+        outer = self
+        self.requests: list[tuple[str, str]] = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+
+            def _answer(self, method: str) -> None:
+                outer.requests.append((method, self.path))
+                status, body = respond(method, self.path)
+                self.send_response(status)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def do_GET(self):
+                self._answer("GET")
+
+            def do_POST(self):
+                self._answer("POST")
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}"
+
+    def close(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
