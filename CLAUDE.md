@@ -68,7 +68,7 @@ terminal you use for testing:
 ```bash
 export ORBIT_DIR=~/.orbit-dev                          # keeps test data out of the real ~/.orbit
 bin/orbit init --dev --me charon --peer pluto          # point this test folder at the fake peer
-bin/orbit daemon &                                     # this machine's daemon (or use systemd)
+bin/orbit daemon &                                     # this machine's daemon (not systemd: it would use the real ~/.orbit)
 bin/orbit dev peer                                     # fake pluto on 127.0.0.1:1979 (its own terminal)
 bin/orbit dev peer note "hi from fake pluto"           # run any command *as* the fake peer
 bin/orbit greet                                        # see it arrive
