@@ -73,24 +73,29 @@ class Store:
         self.path = path
         self.me = me
         self._local = threading.local()
+        self._all: list[sqlite3.Connection] = []
+        self._lock = threading.Lock()
         path.parent.mkdir(parents=True, exist_ok=True)
         self._conn().executescript(SCHEMA)
 
     def _conn(self) -> sqlite3.Connection:
         conn = getattr(self._local, "conn", None)
         if conn is None:
-            conn = sqlite3.connect(self.path, timeout=2.0, isolation_level=None)
+            conn = sqlite3.connect(self.path, timeout=2.0, isolation_level=None, check_same_thread=False)
             conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA busy_timeout=2000")
             self._local.conn = conn
+            with self._lock:
+                self._all.append(conn)
         return conn
 
     def close(self) -> None:
-        """Close this thread's connection. Safe to call twice."""
-        conn = getattr(self._local, "conn", None)
-        if conn is not None:
+        """Close every connection this Store opened, from any thread. Safe to call twice; the Store reopens on next use."""
+        with self._lock:
+            conns, self._all = self._all, []
+        for conn in conns:
             conn.close()
-            self._local.conn = None
+        self._local = threading.local()
 
     # ---- writing ----
 

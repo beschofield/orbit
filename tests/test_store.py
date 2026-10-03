@@ -81,14 +81,13 @@ class StoreTest(unittest.TestCase):
         def work(store):
             for _ in range(25):
                 store.append("notes.sent", {})
-            store.close()
 
         threads = [threading.Thread(target=work, args=(s,)) for s in (self.store, other, self.store, other)]
         for t in threads:
             t.start()
         for t in threads:
             t.join()
-        other.close()  # close other's main thread connection
+        other.close()
         seqs = sorted(e.seq for e, _ in self.store.own_after(0, 500))
         self.assertEqual(seqs, list(range(1, 101)))
 
@@ -98,3 +97,19 @@ class StoreTest(unittest.TestCase):
         self.store.close()  # should be safe to call twice
         b = self.store.append("notes.sent", {"text": "b"})
         self.assertEqual(b.seq, 2)  # reopened and continues seq
+
+    def test_close_from_main_thread_closes_connections_opened_by_other_threads(self):
+        def worker():
+            self.store.append("notes.sent", {})
+
+        threads = [threading.Thread(target=worker) for _ in range(3)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(len(self.store._all), 4)  # 1 main thread + 3 worker threads
+        self.store.close()
+        self.assertEqual(self.store._all, [])
+        # verify store still works after close
+        b = self.store.append("notes.sent", {"text": "test"})
+        self.assertEqual(b.seq, 4)
