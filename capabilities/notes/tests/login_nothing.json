@@ -1,0 +1,5 @@
+{
+  "description": "nothing new: no bubbles, no events, prompt cleared",
+  "input": {"trigger": {"kind": "login"}},
+  "expect": {"say": [], "emit": [], "prompt": ""}
+}

@@ -1,0 +1,11 @@
+{
+  "description": "arriving notes update the envelope count in the prompt",
+  "input": {
+    "trigger": {"kind": "received", "events": []},
+    "events": [
+      {"origin": "pluto", "seq": 1, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "a"}},
+      {"origin": "pluto", "seq": 2, "type": "notes.sent", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"text": "b"}}
+    ]
+  },
+  "expect": {"prompt": "✉ 2", "say": [], "emit": []}
+}

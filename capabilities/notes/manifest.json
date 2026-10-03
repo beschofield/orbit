@@ -1,0 +1,18 @@
+{
+  "name": "notes",
+  "description": "Leave little notes for each other; they pop up at the next login.",
+  "contract": 1,
+  "run": "main.py",
+  "commands": [
+    {"name": "note", "usage": "note <text>", "help": "Send a note to your girlfriend."},
+    {"name": "notes", "usage": "notes", "help": "Show the last 20 notes."}
+  ],
+  "triggers": ["login", "received"],
+  "tick_seconds": null,
+  "event_types": {
+    "notes.sent": {"keep": "log"},
+    "notes.seen": {"keep": "log"},
+    "notes.receipts_shown": {"keep": "log"}
+  },
+  "receives": ["notes.sent", "notes.seen"]
+}

@@ -1,0 +1,5 @@
+{
+  "description": "orbit note with no text shows usage and sends nothing",
+  "input": {"trigger": {"kind": "command", "name": "note", "args": []}},
+  "expect": {"emit": [], "print": "usage: orbit note <text>    e.g. orbit note \"lunch at 1?\""}
+}

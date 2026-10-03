@@ -1,0 +1,15 @@
+{
+  "description": "when Pluto has seen my note, Charon tells me once",
+  "input": {
+    "trigger": {"kind": "login"},
+    "events": [
+      {"origin": "charon", "seq": 5, "type": "notes.sent", "ts": "2026-10-03T12:00:00Z", "v": 1, "data": {"text": "lunch at 1?"}},
+      {"origin": "pluto", "seq": 7, "type": "notes.seen", "ts": "2026-10-03T12:30:00Z", "v": 1, "data": {"seqs": [5]}}
+    ]
+  },
+  "expect": {
+    "say": [{"who": "charon", "mood": "happy", "text": "Pluto read your note ♥"}],
+    "emit": [{"type": "notes.receipts_shown", "data": {"seqs": [5]}, "v": 1}],
+    "prompt": ""
+  }
+}

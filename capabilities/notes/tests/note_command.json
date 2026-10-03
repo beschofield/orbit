@@ -1,0 +1,8 @@
+{
+  "description": "orbit note sends a note and Charon confirms",
+  "input": {"trigger": {"kind": "command", "name": "note", "args": ["lunch", "at", "1?"]}},
+  "expect": {
+    "emit": [{"type": "notes.sent", "data": {"text": "lunch at 1?"}, "v": 1}],
+    "say": [{"who": "charon", "mood": "happy", "text": "Sent! I'll make sure Pluto gets it."}]
+  }
+}
