@@ -1,0 +1,11 @@
+[Unit]
+Description=Orbit daemon (Pluto & Charon)
+After=network-online.target tailscaled.service
+
+[Service]
+ExecStart=%h/.local/bin/orbit daemon
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
