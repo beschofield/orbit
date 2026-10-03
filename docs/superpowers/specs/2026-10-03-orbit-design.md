@@ -7,22 +7,24 @@
 ## 1. Purpose
 
 Two Linux machines on the same tailnet, **charon** (Becca's) and **pluto**
-(her partner's), get a pair of terminal companions: ASCII Pluto and Charon.
+(Gabby's, her partner), get a pair of terminal companions: ASCII Pluto and Charon.
 Like Pluto and Charon in space, which are tidally locked and orbit a shared
 point between them, the two machines are equal peers sharing one small world.
 
 Orbit is a **surprise gift**. Becca builds v1 alone on charon; it is installed
-on pluto on reveal day. After that, her partner extends it by adding new
+on pluto on reveal day. After that, Gabby extends it by adding new
 **capabilities**, mostly by working with Claude. So the code and docs are
 designed for **agents first, humans second**.
 
 ### Success criteria
 
-- At login, each person is greeted by the characters. The greeting shows
-  unread notes from the partner and a read receipt for notes they sent.
+- At login, Becca and Gabby are each greeted by the characters. The greeting
+  shows unread notes from the other person and a read receipt for notes they
+  sent.
 - `orbit note "lunch at 1?"` on one machine shows up on the other within a few
   seconds when both are online, and at the next sync when one was offline.
-- The shell prompt shows the partner's presence, and it never adds noticeable
+- The shell prompt shows the other person's presence (Gabby's on charon,
+  Becca's on pluto), and it never adds noticeable
   latency, even if Orbit is broken.
 - A Claude session told "read CLAUDE.md, then use the new-capability skill"
   can add a working, tested capability without changing the core.
@@ -399,7 +401,8 @@ PS1='${ORBIT_PS:+$ORBIT_PS }'"$PS1"
    - how to verify: `python3 -m unittest`, `orbit dev test <cap>`,
      `orbit doctor`
    - a pointer to the contract doc and the skill
-2. **`.claude/skills/new-capability/SKILL.md`** walks through:
+2. **`.claude/skills/new-capability/SKILL.md`** (mainly for Gabby's Claude
+   sessions) walks through:
    1. copy `capabilities/example`
    2. write the test cases first
    3. fill in the manifest
@@ -473,7 +476,7 @@ everything in under 30 s.
 ## 15. Reveal day (`docs/reveal-day.md`)
 
 1. Confirm pluto has Python 3.11 or newer, and check which shell it uses.
-2. Confirm the tailnet access rules allow charon ↔ pluto on port 1978. Ask her
+2. Confirm the tailnet access rules allow charon ↔ pluto on port 1978. Ask Gabby
    to adjust them if needed.
 3. Copy the repo over (or clone it once it's on GitHub as `beschofield/orbit`)
    and run `install.sh` with `me=pluto`, `peer=charon`.
