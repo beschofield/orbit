@@ -49,7 +49,7 @@ def new_receipts(inp: dict) -> list[int]:
 
 def unread_prompt(inp: dict) -> str:
     n = len(unread(inp))
-    return f"✉ {n}" if n else ""
+    return f"✉  {n}" if n else ""
 
 
 def _local(ts: str) -> str:
@@ -138,7 +138,7 @@ def read(inp: dict, args: list[str]) -> dict:
     left = [e["seq"] for e in unread(inp)]
     if note["origin"] == peer and note["seq"] in left:
         out["emit"] = [{"type": "notes.seen", "data": {"seqs": [note["seq"]]}}]
-        out["prompt"] = f"✉ {len(left) - 1}" if len(left) > 1 else ""
+        out["prompt"] = f"✉  {len(left) - 1}" if len(left) > 1 else ""
     return out
 
 

@@ -24,7 +24,7 @@ class NotesRoundTripTest(unittest.TestCase):
         code, out, _ = self.charon.cli("note", "lunch at 1?")
         self.assertEqual(code, 0)
         self.assertIn("Sent!", out)
-        self.assertTrue(wait_for(lambda: "✉ 1" in self.pluto.prompt()), self.pluto.prompt())
+        self.assertTrue(wait_for(lambda: "✉  1" in self.pluto.prompt()), self.pluto.prompt())
 
         code, out, _ = self.pluto.cli("greet")
         self.assertIn("lunch at 1?", out)

@@ -15,7 +15,7 @@ Leave little notes for each other. They pop up at the next login.
   2. Unread notes, said by the sender's character (up to 5, then a summary) and then
      marked seen. Each starts with who it's from and when ("✉ Note from Pluto · 6:42 pm",
      or "Oct 2, 9:30 pm" if it's older than today).
-- **Prompt:** `✉ N` while you have N unread notes.
+- **Prompt:** `✉  N` while you have N unread notes.
 - **Event types:** all `keep: log`.
   - `notes.sent` `{text}`
   - `notes.seen` `{seqs}`: the peer's `notes.sent` seqs I've seen
