@@ -26,5 +26,5 @@ class DocsTest(unittest.TestCase):
             self.assertIn(needle, text)
 
     def test_no_doc_says_partner(self):
-        for path in [REPO / "README.md", REPO / "docs" / "reveal-day.md", *(REPO / "capabilities").glob("*/README.md")]:
+        for path in [REPO / "README.md", REPO / "docs" / "reveal.md", *(REPO / "capabilities").glob("*/README.md")]:
             self.assertNotIn("partner", path.read_text(encoding="utf-8").lower(), path)

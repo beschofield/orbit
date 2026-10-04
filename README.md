@@ -25,6 +25,9 @@ terminal companion, and the two keep each other company over the tailnet.
 
 ## Install (on each machine)
 
+Setting up pluto for the first time? Follow `docs/reveal.md`, which walks through
+installing and testing it together.
+
 ```bash
 git clone <this repo> ~/orbit   # or copy the folder over
 ~/orbit/install.sh              # asks which machine this is

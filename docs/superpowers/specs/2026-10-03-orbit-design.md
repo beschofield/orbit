@@ -59,7 +59,7 @@ orbit/
 ├── bin/orbit                     # tiny launcher: python3 -m orbit.cli "$@"
 ├── docs/
 │   ├── capability-contract.md    # SINGLE source of truth for the contract
-│   ├── reveal-day.md             # install checklist for pluto
+│   ├── reveal.md                 # Gabby's setup and testing guide
 │   └── superpowers/specs/        # design specs (this file)
 ├── orbit/                        # core package (stdlib only)
 │   ├── cli.py                    # `orbit <cmd>`: routing, dev tools, doctor
@@ -332,7 +332,7 @@ PS1='${ORBIT_PS:+$ORBIT_PS }'"$PS1"
   segment and rebuilds `~/.orbit/prompt`: the non-empty segments joined by
   `" · "` in `prompt_order`, written atomically (write to a temp file, then
   rename).
-- Pluto's shell may not be bash. The reveal-day checklist checks this, and v1
+- Pluto's shell may not be bash. The reveal guide (`docs/reveal.md`) checks this, and v1
   supports bash only.
 
 ## 10. v1 capabilities
@@ -473,7 +473,7 @@ everything in under 30 s.
 - **prompt path:** a test checks that the bashrc snippet runs no Python (it
   reads the file only).
 
-## 15. Reveal day (`docs/reveal-day.md`)
+## 15. Reveal day (`docs/reveal.md`)
 
 1. Confirm pluto has Python 3.11 or newer, and check which shell it uses.
 2. Confirm the tailnet access rules allow charon ↔ pluto on port 1978. Ask Gabby
