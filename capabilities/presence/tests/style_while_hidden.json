@@ -1,0 +1,12 @@
+{
+  "description": "changing the style while hidden keeps it hidden and says how to show it",
+  "input": {
+    "trigger": {"kind": "command", "name": "status", "args": ["style", "both"]},
+    "latest": {"charon": {"presence.display": {"origin": "charon", "seq": 9, "type": "presence.display", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"shown": false, "style": "symbol"}}}, "pluto": {}}
+  },
+  "expect": {
+    "emit": [{"type": "presence.display", "data": {"shown": false, "style": "both"}, "v": 1}],
+    "prompt": "",
+    "print": "Status style: both, e.g. ♇ pluto: ✨. It's hidden right now; run `orbit status toggle` to see it."
+  }
+}

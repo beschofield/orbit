@@ -1,0 +1,9 @@
+{
+  "description": "while hidden, the tick keeps the prompt segment empty (even with the peer offline); a manual away still isn't overwritten",
+  "input": {
+    "trigger": {"kind": "tick"},
+    "peer": {"name": "pluto", "online": false, "last_seen": null},
+    "latest": {"charon": {"presence.display": {"origin": "charon", "seq": 9, "type": "presence.display", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"shown": false}}, "presence.status": {"origin": "charon", "seq": 8, "type": "presence.status", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"state": "away", "manual": true}}}, "pluto": {}}
+  },
+  "expect": {"prompt": "", "emit": []}
+}

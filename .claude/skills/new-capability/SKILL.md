@@ -68,5 +68,5 @@ two machines on one computer").
   event types.
 - Commit.
 - orbitd notices new or changed capabilities within 30 s; no restart needed.
-- **Tell the person to install the change on both machines** (copy or pull the repo
-  on each). Capability code doesn't sync, and `orbit doctor` will flag a mismatch.
+- **Tell the person to install the change on both machines**: push, then run
+  `orbit update` on the other one. Capability code doesn't sync, and `orbit doctor` will flag a mismatch.

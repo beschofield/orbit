@@ -1,0 +1,8 @@
+{
+  "description": "while hidden, a new status from Pluto doesn't bring the segment back",
+  "input": {
+    "trigger": {"kind": "received", "events": []},
+    "latest": {"charon": {"presence.display": {"origin": "charon", "seq": 9, "type": "presence.display", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"shown": false}}}, "pluto": {"presence.status": {"origin": "pluto", "seq": 3, "type": "presence.status", "ts": "2026-10-03T13:59:00Z", "v": 1, "data": {"state": "idle", "manual": false}}}}
+  },
+  "expect": {"prompt": ""}
+}

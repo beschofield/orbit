@@ -1,0 +1,8 @@
+{
+  "description": "by default an active Pluto shows as sparkles, with symbol and name",
+  "input": {
+    "trigger": {"kind": "received", "events": []},
+    "latest": {"charon": {}, "pluto": {"presence.status": {"origin": "pluto", "seq": 3, "type": "presence.status", "ts": "2026-10-03T13:59:00Z", "v": 1, "data": {"state": "active", "manual": false}}}}
+  },
+  "expect": {"prompt": "♇ pluto: ✨"}
+}

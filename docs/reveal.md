@@ -87,7 +87,7 @@ in Charon's bubble, something like:
 welcome to orbit ♥
 ```
 
-Your prompt now starts with Becca's status, for example `☾ charon: active`.
+Your prompt now starts with Becca's status, for example `☾ charon: ✨` (✨ active, 💭 idle, ⏳ away).
 
 ## 6. Test it together
 
@@ -99,7 +99,7 @@ Do these with Becca at charon:
 3. **Get your read receipt:** open another new terminal on pluto. Pluto tells you
    `Charon read your note "it works!! ♥" ♥`.
 4. **Try presence:** run `orbit away "making tea"`. At Becca's next prompt, it starts
-   with `♇ pluto: away (making tea)`. Run `orbit back` to clear it. Ask her to do the
+   with `♇ pluto: ⏳ (making tea)`. Run `orbit back` to clear it. Ask her to do the
    same, and watch your prompt change.
 5. **Look around:** `orbit notes` shows recent notes from both of you, `orbit hi` says
    hi, and `orbit help` lists everything.
@@ -120,7 +120,7 @@ Do these with Becca at charon:
 - **Make it yours.** Open Claude Code in `~/orbit` and say
   *"Read CLAUDE.md, then use the new-capability skill to add …"*. `TODO.md` has a list
   of ideas and things to build next.
-- **Getting each other's changes:** run `git pull` in `~/orbit`. New capabilities show
-  up within about 30 seconds. If the core (`orbit/`) changed, also run
-  `systemctl --user restart orbitd`. `orbit doctor` tells you if your machine and
-  Becca's are out of sync.
+- **Getting each other's changes:** run `orbit update`. It pulls the latest code and
+  restarts orbitd only if the core changed; new capabilities show up within about 30
+  seconds. `orbit doctor` tells you if your machine and Becca's are out of sync, and
+  which one needs the update.

@@ -1,0 +1,9 @@
+{
+  "description": "orbit status toggle hides a shown status and clears the prompt segment",
+  "input": {"trigger": {"kind": "command", "name": "status", "args": ["toggle"]}},
+  "expect": {
+    "emit": [{"type": "presence.display", "data": {"shown": false, "style": "both"}, "v": 1}],
+    "prompt": "",
+    "print": "Status hidden from your prompt. Run `orbit status toggle` to show it again."
+  }
+}

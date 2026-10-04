@@ -1,0 +1,8 @@
+{
+  "description": "with the symbol style, a new away status from Pluto shows the symbol, emoji and message",
+  "input": {
+    "trigger": {"kind": "received", "events": []},
+    "latest": {"charon": {"presence.display": {"origin": "charon", "seq": 9, "type": "presence.display", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"shown": true, "style": "symbol"}}}, "pluto": {"presence.status": {"origin": "pluto", "seq": 3, "type": "presence.status", "ts": "2026-10-03T13:59:00Z", "v": 1, "data": {"state": "away", "manual": true, "message": "at the gym"}}}}
+  },
+  "expect": {"prompt": "♇ ⏳ (at the gym)"}
+}

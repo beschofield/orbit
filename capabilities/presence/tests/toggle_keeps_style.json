@@ -1,0 +1,11 @@
+{
+  "description": "orbit status toggle keeps the chosen style when showing the status again",
+  "input": {
+    "trigger": {"kind": "command", "name": "status", "args": ["toggle"]},
+    "latest": {"charon": {"presence.display": {"origin": "charon", "seq": 9, "type": "presence.display", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"shown": false, "style": "name"}}}, "pluto": {}}
+  },
+  "expect": {
+    "emit": [{"type": "presence.display", "data": {"shown": true, "style": "name"}, "v": 1}],
+    "prompt": "pluto"
+  }
+}

@@ -6,58 +6,12 @@ feature should usually be a capability: see `CLAUDE.md` and the `new-capability`
 
 ## Next up
 
-### `orbit update`: one command to get the latest code
+### Login nudge when the other machine has newer code
 
-**Why:** code doesn't sync between the machines (only events do). After one of you
-pushes, the other has to `git pull` and sometimes restart orbitd. `orbit doctor`
-flags the mismatch, but nothing fixes it. This command should make updating one step.
-
-**What it does, in order:**
-1. **Refuse if the checkout isn't clean.** Run `git -C <repo> status --porcelain`, and
-   if it's non-empty, say "you have local changes in <repo> — commit or stash them
-   first". Never discard work.
-2. **Remember the current commit** (`git rev-parse HEAD`), then
-   `git -C <repo> pull --ff-only`. If the fast-forward fails, explain that the branches
-   diverged and point to `git pull --rebase` (don't do it automatically).
-3. **Work out what changed:** `git diff --name-only OLD NEW`.
-   - Nothing changed: print "already up to date" and stop.
-   - Only `capabilities/**` changed: no restart is needed, because orbitd rescans
-     capabilities every 30 s. Say so.
-   - Anything under `orbit/`, `bin/` or `shell/` changed: run
-     `systemctl --user restart orbitd`. If systemd isn't available, print the command.
-   - `shell/orbit.bash` or `install.sh` changed: suggest re-running `install.sh`. It's
-     safe to run again; it replaces the bashrc block.
-4. **Show a short summary:** `git log --oneline OLD..NEW`, then run the doctor checks
-   (or a subset) so a broken update shows up right away.
-5. A character says something cute, for example Charon: "Fresh code, same orbit ♥".
-
-**Where it goes:** this is a **core command**, not a capability, because it touches
-the repo and systemd, which capabilities must never do (invariant 3). Steps:
-- Add `update` to `RESERVED_COMMANDS` in `orbit/contract.py`, to the reserved list
-  in `docs/capability-contract.md`, and to `CORE_COMMANDS` in `orbit/cli.py`.
-- Put the logic in a new `orbit/update.py`. One job, as with `doctor.py`.
-- Find the repo with `config.REPO_ROOT`.
-
-**Nice extra: tell the other machine when it's behind.**
-- Add the current git commit (`git rev-parse --short HEAD`, or `null` if it isn't a
-  git checkout) to `/health` alongside `core_version`.
-- Have `orbit doctor` print "pluto is on <sha>, charon is on <sha> — run `orbit update`
-  on the older one".
-- Optionally, the companions login greeting could mention it, for example Pluto:
-  "Charon has newer code! Try `orbit update`". That needs the peer's commit in the
-  capability input; one way is to carry it in the peer status.
-
-**Tests:**
-- Create a temp bare repo as `origin` and clone it.
-- Commit a capability-only change upstream, then check: no restart.
-- Commit a core change upstream, then check that a fake `systemctl` on `PATH` received
-  `--user restart orbitd`.
-- A dirty working tree is refused and nothing changes.
-- A diverged branch is refused with the hint.
-- Never touch the real repo, `~/.orbit` or systemd in tests.
-
-**Convention to adopt alongside it:** bump `CORE_VERSION` in `orbit/__init__.py`
-whenever `orbit/` changes in a way the other machine must match.
+`orbit update` and the doctor check are done; orbitd's `/health` now reports `commit`.
+What's left: have the companions greeting say, for example, Pluto: "Charon has newer
+code! Try `orbit update`". That needs the peer's commit in the capability input; one way
+is to carry it in the peer status. `doctor.commit_mismatch` already works out who's behind.
 
 ## Known issues (small)
 

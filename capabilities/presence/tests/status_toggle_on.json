@@ -1,0 +1,12 @@
+{
+  "description": "orbit status toggle shows a hidden status again",
+  "input": {
+    "trigger": {"kind": "command", "name": "status", "args": ["toggle"]},
+    "latest": {"charon": {"presence.display": {"origin": "charon", "seq": 9, "type": "presence.display", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"shown": false}}}, "pluto": {}}
+  },
+  "expect": {
+    "emit": [{"type": "presence.display", "data": {"shown": true, "style": "both"}, "v": 1}],
+    "prompt": "♇ pluto",
+    "print": "Status is back in your prompt."
+  }
+}
