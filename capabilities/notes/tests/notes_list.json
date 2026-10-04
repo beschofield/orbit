@@ -1,11 +1,13 @@
 {
-  "description": "orbit notes lists notes from both people, numbered for orbit read (TZ=UTC in tests)",
+  "description": "orbit notes lists notes from both people, numbered for orbit read; my notes say whether Pluto has read them (TZ=UTC in tests)",
   "input": {
     "trigger": {"kind": "command", "name": "notes", "args": []},
     "events": [
       {"origin": "charon", "seq": 1, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "hi"}},
-      {"origin": "pluto", "seq": 2, "type": "notes.sent", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"text": "hello"}}
+      {"origin": "pluto", "seq": 2, "type": "notes.sent", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"text": "hello"}},
+      {"origin": "pluto", "seq": 3, "type": "notes.seen", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"seqs": [1]}},
+      {"origin": "charon", "seq": 4, "type": "notes.sent", "ts": "2026-10-03T13:02:00Z", "v": 1, "data": {"text": "lunch at 1?"}}
     ]
   },
-  "expect": {"print": "1  2026-10-03 13:00  Charon: hi\n2  2026-10-03 13:01  Pluto: hello"}
+  "expect": {"print": "1  2026-10-03 13:00  Charon: hi  ✓ read\n2  2026-10-03 13:01  Pluto: hello\n3  2026-10-03 13:02  Charon: lunch at 1?  · not read yet"}
 }

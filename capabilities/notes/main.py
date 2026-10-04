@@ -5,7 +5,8 @@
 At login, unread notes are said by the sender's character, with a "✉ Note from …" header
 and the time it was sent, then marked notes.seen.
 The sender then gets a read receipt at their next login (marked notes.receipts_shown).
-`orbit notes` lists recent notes, numbered; `orbit read [n]` shows one again in its
+`orbit notes` lists recent notes, numbered, marking each of mine "✓ read" or
+"· not read yet" (from the peer's notes.seen); `orbit read [n]` shows one again in its
 sender's bubble (default: the newest one received), marking it seen if it wasn't.
 `orbit unread` says every unread note at once. Login says at most MAX_SHOWN and leaves
 the rest unread (still counted in the prompt) so `orbit unread` can show them later.
@@ -112,12 +113,18 @@ def numbered(inp: dict) -> list[tuple[int, dict]]:
 
 
 def history(inp: dict) -> dict:
+    """The last 20 notes, numbered; each of mine ends with whether the peer has read it yet."""
+    me, peer = inp["me"]["name"], inp["peer"]["name"]
     notes = numbered(inp)[-20:]
     if not notes:
         return {"print": "No notes yet. Send one with: orbit note <text>"}
+    seen_by_peer = _seqs(inp["events"], peer, "notes.seen")
     width = len(str(notes[-1][0]))
-    return {"print": "\n".join(f"{n:>{width}}  {_local(e['ts'])}  {NAMES.get(e['origin'], e['origin'])}: {_text(e)}"
-                               for n, e in notes)}
+
+    def line(n: int, e: dict) -> str:
+        status = "" if e["origin"] != me else "  ✓ read" if e["seq"] in seen_by_peer else "  · not read yet"
+        return f"{n:>{width}}  {_local(e['ts'])}  {NAMES.get(e['origin'], e['origin'])}: {_text(e)}{status}"
+    return {"print": "\n".join(line(n, e) for n, e in notes)}
 
 
 def read(inp: dict, args: list[str]) -> dict:
