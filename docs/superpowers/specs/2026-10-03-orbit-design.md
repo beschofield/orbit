@@ -197,7 +197,7 @@ example companions can read presence.
 
 ```json
 {
-  "say":    [{"who": "pluto", "mood": "love", "text": "Pluto says: lunch at 1?"}],
+  "say":    [{"who": "pluto", "mood": "love", "look": "side", "text": "Pluto says: lunch at 1?"}],
   "emit":   [{"type": "notes.seen", "data": {"seqs": [41, 42]}, "v": 1}],
   "prompt": "✉ 1",
   "print":  "plain text for command output"
@@ -206,7 +206,9 @@ example companions can read presence.
 
 - `say[].who` is `"pluto"` or `"charon"`. `mood` is one of `neutral`,
   `happy`, `sleepy`, `love`, `thinking`, `worried`. `text` is at most 280
-  characters.
+  characters. `look` is optional: `"forward"` (the default, at the person at
+  the terminal) or `"side"` (toward the other planet). See
+  `docs/superpowers/specs/2026-10-04-look-direction-design.md`.
 - `emit[].type` must be declared in this capability's `event_types`. `v`
   defaults to 1. The core fills in `origin`, `seq` and `ts`.
 - `prompt`: a string replaces this capability's prompt segment, `""` clears

@@ -145,6 +145,31 @@ class OutputTest(unittest.TestCase):
     def test_non_string_emit_type_is_a_contract_error(self):
         self.assertIn("is not declared", self.problems({"emit": [{"type": ["x"], "data": {}}]})[0])
 
+    def test_look_defaults_to_forward(self):
+        out = contract.parse_output('{"say": [{"who": "pluto", "mood": "happy", "text": "hi"}]}', self.m)
+        self.assertEqual(out.say[0].look, "forward")
+
+    def test_look_side_is_accepted(self):
+        out = contract.parse_output(json.dumps(
+            {"say": [{"who": "pluto", "mood": "love", "look": "side", "text": "hi"}]}), self.m)
+        self.assertEqual(out.say[0].look, "side")
+
+    def test_bad_look_says_how_to_fix(self):  # Review Focus #1, #2
+        for look in ("Side", "left", None, ["side"], {"look": "side"}):
+            with self.subTest(look=look):
+                probs = self.problems({"say": [{"who": "pluto", "mood": "happy", "look": look, "text": "hi"}]})
+                self.assertEqual(len(probs), 1, probs)
+                self.assertIn('say[0].look', probs[0])
+                self.assertIn('must be "forward" or "side" (leave it out for "forward")', probs[0])
+
+    def test_output_to_dict_leaves_out_forward_look(self):
+        out = contract.parse_output(json.dumps({"say": [
+            {"who": "charon", "mood": "happy", "text": "a"},
+            {"who": "pluto", "mood": "love", "look": "side", "text": "b"}]}), self.m)
+        self.assertEqual(contract.output_to_dict(out)["say"], [
+            {"who": "charon", "mood": "happy", "text": "a"},
+            {"who": "pluto", "mood": "love", "look": "side", "text": "b"}])
+
     def test_output_to_dict(self):
         out = contract.parse_output('{"emit": [{"type": "notes.sent", "data": {"text": "a"}}]}', self.m)
         self.assertEqual(contract.output_to_dict(out), {

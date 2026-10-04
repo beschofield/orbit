@@ -123,7 +123,7 @@ An event:
 
 ```json output
 {
-  "say": [{"who": "pluto", "mood": "love", "text": "lunch at 1?"}],
+  "say": [{"who": "pluto", "mood": "love", "look": "side", "text": "lunch at 1?"}],
   "emit": [{"type": "notes.seen", "data": {"seqs": [41, 42]}, "v": 1}],
   "prompt": ""
 }
@@ -133,7 +133,7 @@ Every key is optional. Print `{}` (or nothing at all) to do nothing.
 
 | Key | Rules |
 |---|---|
-| `say` | A list of `{"who", "mood", "text"}`. `who` is `"pluto"` or `"charon"`. `mood` is one of `neutral`, `happy`, `sleepy`, `love`, `thinking`, `worried`. `text` is 1–280 characters, and newlines are fine. |
+| `say` | A list of `{"who", "mood", "text"}`, each with an optional `"look"`. `who` is `"pluto"` or `"charon"`. `mood` is one of `neutral`, `happy`, `sleepy`, `love`, `thinking`, `worried`. `text` is 1–280 characters, and newlines are fine. `look` is which way the planet looks: `"forward"`, at the person at the terminal (the default, so leave it out), or `"side"`, toward the other planet. Use `"side"` when the bubble carries the other person's words or reaches toward them, like a note being sent or delivered. |
 | `emit` | A list of `{"type", "data", "v"}`. `type` must be in your `event_types`. `data` is an object of at most 16 KB. `v` defaults to 1. The core adds `origin`, `seq` and `ts`, stores the event and syncs it. |
 | `prompt` | Your segment of the shell prompt: at most 40 printable characters, with no newlines or control codes. `""` clears it; leaving the key out keeps the current one. |
 | `print` | Plain text shown to the person; only used for command triggers. Good for messages like "usage: ...". Control characters (escape codes) are stripped; newlines are kept. |
@@ -159,7 +159,7 @@ Each file in `tests/` is one case:
   "input": {"trigger": {"kind": "command", "name": "note", "args": ["lunch", "at", "1?"]}},
   "expect": {
     "emit": [{"type": "notes.sent", "data": {"text": "lunch at 1?"}, "v": 1}],
-    "say": [{"who": "charon", "mood": "happy", "text": "Sent! I'll make sure Pluto gets it."}]
+    "say": [{"who": "charon", "mood": "happy", "look": "side", "text": "Sent! I'll make sure Pluto gets it."}]
   }
 }
 ```
