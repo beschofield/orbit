@@ -33,10 +33,12 @@ capability contract. No capability needs code of its own for it.
 | 7 | notes · login, "…and N more" | peer's planet | **side** |
 | 8 | example · `orbit hello` | own planet | forward |
 | 9 | core · `orbit update` (up to date, doctor problem, updated ♥) | own planet | forward |
+| 10 | notes · `orbit read [n]` (a note shown again) | sender's planet | **side** |
 
 Row 9 came from `orbit update` (PR #2), merged after this table was agreed. It builds
 `Say(who=..., mood=..., text=...)` in `orbit/update.py` and gets forward from the
-default, so it needs no code change.
+default, so it needs no code change. Row 10 came from `orbit read` (PR #5), also merged
+later; it shows the same note as row 6, so it looks to the side like row 6 does.
 
 - **`look` is left out when it's forward**, in capability code and in capability
   test cases. Write `"look": "side"` only where it applies.

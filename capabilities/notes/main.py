@@ -7,8 +7,9 @@ and the time it was sent, then marked notes.seen.
 The sender then gets a read receipt at their next login (marked notes.receipts_shown).
 `orbit notes` lists recent notes, numbered; `orbit read [n]` shows one again in its
 sender's bubble (default: the newest one received), marking it seen if it wasn't.
-Bubbles that pass a note between the planets (sent, and each delivered note) look to the side,
-toward the other planet; the read receipt is news for you, so it faces forward (no "look").
+Bubbles that pass a note between the planets (sent, delivered, or shown again by
+`orbit read`) look to the side, toward the other planet; the read receipt is news for
+you, so it faces forward (no "look").
 Unread and seen are worked out from input["events"] every time; there are no local files.
 Contract: docs/capability-contract.md
 """
@@ -133,7 +134,7 @@ def read(inp: dict, args: list[str]) -> dict:
     else:
         return {"print": f"usage: orbit read [n]    e.g. orbit read (newest from {NAMES[peer]}), "
                          "orbit read 3 (#3 in orbit notes)"}
-    out: dict = {"say": [{"who": note["origin"], "mood": "love", "text": incoming(note, inp)}]}
+    out: dict = {"say": [{"who": note["origin"], "mood": "love", "look": "side", "text": incoming(note, inp)}]}
     left = [e["seq"] for e in unread(inp)]
     if note["origin"] == peer and note["seq"] in left:
         out["emit"] = [{"type": "notes.seen", "data": {"seqs": [note["seq"]]}}]

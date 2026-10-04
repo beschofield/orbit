@@ -12,7 +12,7 @@
     ]
   },
   "expect": {
-    "say": [{"who": "pluto", "mood": "love", "text": "✉ Note from Pluto · 1:05 pm\ndinner at 7?"}],
+    "say": [{"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:05 pm\ndinner at 7?"}],
     "emit": []
   }
 }
