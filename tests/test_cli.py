@@ -88,6 +88,18 @@ class CliTest(unittest.TestCase):
         self.assertIn("from one", out)
         self.assertIn("from two", out)
 
+    def test_greet_puts_a_divider_between_capabilities_only(self):
+        from orbit import characters
+        for name, texts in (("one", ["greeting"]), ("two", ["note a", "note b"])):
+            says = [{"who": "pluto", "mood": "happy", "text": t} for t in texts]
+            write_cap(self.caps, name, py(f"print(json.dumps({{'say': {says!r}}}))"), triggers=["login"])
+        out = run_cli(self.data, "greet")[1]
+        line = characters.divider()
+        self.assertEqual(out.count(line), 1)
+        self.assertLess(out.index("greeting"), out.index(line))
+        self.assertLess(out.index(line), out.index("note a"))
+        self.assertNotIn(line, out[out.index("note a"):])  # no divider inside one capability's bubbles
+
     def test_greet_skips_a_broken_capability_quietly(self):
         write_cap(self.caps, "broken", py("sys.exit(1)"), triggers=["login"])
         write_cap(self.caps, "fine", py('print(json.dumps({"say": [{"who": "charon", "mood": "happy", "text": "ok"}]}))'),

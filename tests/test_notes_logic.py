@@ -45,8 +45,8 @@ class NotesLogicTest(unittest.TestCase):
             time.tzset()
             out = notes.handle({**BASE, "events": [old, mine, seen], "trigger": {"kind": "login"}})
         time.tzset()
-        self.assertEqual(out["say"][0]["text"], "✉ Note from Pluto · Oct 2, 9:30 pm\nfrom yesterday")
-        self.assertEqual(out["say"][1]["text"], 'Pluto read your note "a very long note that keeps going and g…" ♥')
+        self.assertEqual(out["say"][0]["text"], 'Pluto read your note "a very long note that keeps going and g…" ♥')
+        self.assertEqual(out["say"][1]["text"], "✉ Note from Pluto · Oct 2, 9:30 pm\nfrom yesterday")
 
     def test_unread_ignores_my_own_notes(self):
         inp = {**BASE, "events": [sent(1, "mine", origin="charon")]}

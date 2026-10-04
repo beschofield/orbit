@@ -111,6 +111,10 @@ def login(inp: dict) -> dict:
     me, peer = inp["me"]["name"], inp["peer"]["name"]
     say: list[dict] = []
     emit: list[dict] = []
+    receipts = new_receipts(inp)
+    if receipts:  # first, so news about your notes isn't mixed up with hers
+        say.append({"who": me, "mood": "happy", "text": receipt_text(peer, receipts, inp)})
+        emit.append({"type": "notes.receipts_shown", "data": {"seqs": receipts}})
     notes = unread(inp)
     for e in notes[:MAX_SHOWN]:
         say.append({"who": peer, "mood": "love", "text": incoming(e, inp)})
@@ -119,10 +123,6 @@ def login(inp: dict) -> dict:
                     "text": f"…and {len(notes) - MAX_SHOWN} more. See them all with: orbit notes"})
     if notes:
         emit.append({"type": "notes.seen", "data": {"seqs": [e["seq"] for e in notes]}})
-    receipts = new_receipts(inp)
-    if receipts:
-        say.append({"who": me, "mood": "happy", "text": receipt_text(peer, receipts, inp)})
-        emit.append({"type": "notes.receipts_shown", "data": {"seqs": receipts}})
     return {"say": say, "emit": emit, "prompt": ""}
 
 

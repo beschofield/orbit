@@ -107,3 +107,13 @@ def render(who: str, mood: str, text: str, color: bool = False) -> str:
 
 def render_says(says: Sequence[Say], color: bool = False) -> str:
     return "\n\n".join(render(s.who, s.mood, s.text, color) for s in says)
+
+
+DIVIDER = " " + "· " * 29  # 59 columns, the same width as a full bubble row
+DIM = "\033[2m"
+
+
+def divider(color: bool = False) -> str:
+    """The dotted line `orbit greet` puts between capabilities (greeting, then notes, ...)."""
+    line = DIVIDER.rstrip()
+    return f"{DIM}{line}{RESET}" if color else line

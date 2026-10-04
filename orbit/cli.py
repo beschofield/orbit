@@ -103,9 +103,12 @@ def greet(rt: loader.Runtime) -> int:
     with ThreadPoolExecutor(max_workers=len(ms)) as pool:
         results = list(pool.map(lambda m: loader.run(rt, m, {"kind": "login"}), ms))
     done = [(m, res.output) for m, res in zip(ms, results) if res.output is not None]
-    says = [say for _, out in done for say in out.say]
-    if says:
-        print(characters.render_says(says, color=use_color()))
+    color = use_color()
+    groups = [characters.render_says(out.say, color=color) for _, out in done if out.say]
+    if groups:
+        # One group per capability, with a dotted line between them so the greeting
+        # and the notes don't run together.
+        print(f"\n\n{characters.divider(color)}\n\n".join(groups))
         sys.stdout.flush()
     emitted = False
     for m, out in done:
