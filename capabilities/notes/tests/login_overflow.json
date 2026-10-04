@@ -1,5 +1,5 @@
 {
-  "description": "more than five unread notes: five are said, the rest summarized; all look to the side",
+  "description": "more than five unread notes: five are said and marked seen; the rest stay unread for orbit unread; all look to the side",
   "input": {
     "trigger": {"kind": "login"},
     "events": [
@@ -18,9 +18,9 @@
       {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:02 pm\nthree"},
       {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:03 pm\nfour"},
       {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:04 pm\nfive"},
-      {"who": "pluto", "mood": "happy", "look": "side", "text": "…and 1 more. See them all with: orbit notes"}
+      {"who": "pluto", "mood": "happy", "look": "side", "text": "…and 1 more. Read it with: orbit unread"}
     ],
-    "emit": [{"type": "notes.seen", "data": {"seqs": [1, 2, 3, 4, 5, 6]}, "v": 1}],
-    "prompt": ""
+    "emit": [{"type": "notes.seen", "data": {"seqs": [1, 2, 3, 4, 5]}, "v": 1}],
+    "prompt": "✉  1"
   }
 }

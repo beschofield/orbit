@@ -103,7 +103,8 @@ Do these with Becca at charon:
    with `♇ pluto: ⏳ (making tea)`. Run `orbit back` to clear it. Ask her to do the
    same, and watch your prompt change.
 5. **Look around:** `orbit notes` shows recent notes from both of you, `orbit read` shows
-   Becca's latest note again (or `orbit read 3` for note #3), `orbit hi` says
+   Becca's latest note again (or `orbit read 3` for note #3), `orbit unread` shows
+   every note you haven't read yet, `orbit hi` says
    hi, and `orbit help` lists everything.
 
 ## If something's off

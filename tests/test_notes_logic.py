@@ -29,12 +29,13 @@ class NotesLogicTest(unittest.TestCase):
         out = notes.handle({**BASE, "events": [sent(1, "y" * 500)], "trigger": {"kind": "login"}})
         self.assertEqual(len(out["say"][0]["text"]), 280)
 
-    def test_many_unread_are_summarized_but_all_marked_seen(self):
+    def test_many_unread_are_summarized_and_the_rest_stay_unread(self):
         events = [sent(i, f"note {i}") for i in range(1, 9)]
         out = notes.handle({**BASE, "events": events, "trigger": {"kind": "login"}})
         self.assertEqual(len(out["say"]), 6)
-        self.assertIn("and 3 more", out["say"][-1]["text"])
-        self.assertEqual(out["emit"][0]["data"]["seqs"], list(range(1, 9)))
+        self.assertEqual(out["say"][-1]["text"], "…and 3 more. Read them with: orbit unread")
+        self.assertEqual(out["emit"][0]["data"]["seqs"], list(range(1, 6)))
+        self.assertEqual(out["prompt"], "✉  3")
 
     def test_old_notes_show_the_date_and_receipts_quote_the_note(self):
         old = {**sent(1, "from yesterday"), "ts": "2026-10-02T21:30:00Z"}
