@@ -1,0 +1,18 @@
+{
+  "description": "orbit read <n> shows note #n from orbit notes, including my own, said by its sender",
+  "input": {
+    "trigger": {"kind": "command", "name": "read", "args": ["2"]},
+    "now": "2026-10-04T09:00:00Z",
+    "events": [
+      {"origin": "pluto", "seq": 3, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "good luck today!"}},
+      {"origin": "charon", "seq": 8, "type": "notes.sent", "ts": "2026-10-03T13:02:00Z", "v": 1, "data": {"text": "thank you!"}},
+      {"origin": "pluto", "seq": 4, "type": "notes.sent", "ts": "2026-10-03T13:05:00Z", "v": 1, "data": {"text": "dinner at 7?"}},
+      {"origin": "charon", "seq": 9, "type": "notes.seen", "ts": "2026-10-03T13:10:00Z", "v": 1, "data": {"seqs": [3, 4]}},
+      {"origin": "charon", "seq": 10, "type": "notes.sent", "ts": "2026-10-03T13:11:00Z", "v": 1, "data": {"text": "yes!"}}
+    ]
+  },
+  "expect": {
+    "say": [{"who": "charon", "mood": "love", "text": "✉ Note from Charon · Oct 3, 1:02 pm\nthank you!"}],
+    "emit": []
+  }
+}

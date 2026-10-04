@@ -5,6 +5,8 @@
 At login, unread notes are said by the sender's character, with a "✉ Note from …" header
 and the time it was sent, then marked notes.seen.
 The sender then gets a read receipt at their next login (marked notes.receipts_shown).
+`orbit notes` lists recent notes, numbered; `orbit read [n]` shows one again in its
+sender's bubble (default: the newest one received), marking it seen if it wasn't.
 Bubbles that pass a note between the planets (sent, and each delivered note) look to the side,
 toward the other planet; the read receipt is news for you, so it faces forward (no "look").
 Unread and seen are worked out from input["events"] every time; there are no local files.
@@ -101,12 +103,42 @@ def send(inp: dict, args: list[str]) -> dict:
                      "text": f"Sent! I'll make sure {NAMES[inp['peer']['name']]} gets it."}]}
 
 
+def numbered(inp: dict) -> list[tuple[int, dict]]:
+    """Every note in the input, numbered from 1 in arrival order: the numbers `orbit read` takes."""
+    return list(enumerate((e for e in inp["events"] if e["type"] == "notes.sent"), start=1))
+
+
 def history(inp: dict) -> dict:
-    notes = [e for e in inp["events"] if e["type"] == "notes.sent"][-20:]
+    notes = numbered(inp)[-20:]
     if not notes:
         return {"print": "No notes yet. Send one with: orbit note <text>"}
-    return {"print": "\n".join(f"{_local(e['ts'])}  {NAMES.get(e['origin'], e['origin'])}: {_text(e)}"
-                               for e in notes)}
+    width = len(str(notes[-1][0]))
+    return {"print": "\n".join(f"{n:>{width}}  {_local(e['ts'])}  {NAMES.get(e['origin'], e['origin'])}: {_text(e)}"
+                               for n, e in notes)}
+
+
+def read(inp: dict, args: list[str]) -> dict:
+    """Show one note again, said by its sender as at login. Reading an unread note marks it seen."""
+    peer = inp["peer"]["name"]
+    notes = numbered(inp)
+    if not args:
+        received = [e for _, e in notes if e["origin"] == peer]
+        if not received:
+            return {"print": f"No notes from {NAMES[peer]} yet. See everything with: orbit notes"}
+        note = received[-1]
+    elif len(args) == 1 and args[0].isdigit():
+        note = next((e for n, e in notes if n == int(args[0])), None)
+        if note is None:
+            return {"print": f"There's no note #{args[0]}. See the numbers with: orbit notes"}
+    else:
+        return {"print": f"usage: orbit read [n]    e.g. orbit read (newest from {NAMES[peer]}), "
+                         "orbit read 3 (#3 in orbit notes)"}
+    out: dict = {"say": [{"who": note["origin"], "mood": "love", "text": incoming(note, inp)}]}
+    left = [e["seq"] for e in unread(inp)]
+    if note["origin"] == peer and note["seq"] in left:
+        out["emit"] = [{"type": "notes.seen", "data": {"seqs": [note["seq"]]}}]
+        out["prompt"] = f"✉ {len(left) - 1}" if len(left) > 1 else ""
+    return out
 
 
 def login(inp: dict) -> dict:
@@ -131,7 +163,8 @@ def login(inp: dict) -> dict:
 def handle(inp: dict) -> dict:
     trigger = inp["trigger"]
     if trigger["kind"] == "command":
-        return send(inp, trigger["args"]) if trigger["name"] == "note" else history(inp)
+        commands = {"note": send, "read": read, "notes": lambda inp, _: history(inp)}
+        return commands[trigger["name"]](inp, trigger["args"])
     if trigger["kind"] == "login":
         return login(inp)
     if trigger["kind"] == "received":

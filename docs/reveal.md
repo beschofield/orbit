@@ -101,7 +101,8 @@ Do these with Becca at charon:
 4. **Try presence:** run `orbit away "making tea"`. At Becca's next prompt, it starts
    with `♇ pluto: ⏳ (making tea)`. Run `orbit back` to clear it. Ask her to do the
    same, and watch your prompt change.
-5. **Look around:** `orbit notes` shows recent notes from both of you, `orbit hi` says
+5. **Look around:** `orbit notes` shows recent notes from both of you, `orbit read` shows
+   Becca's latest note again (or `orbit read 3` for note #3), `orbit hi` says
    hi, and `orbit help` lists everything.
 
 ## If something's off

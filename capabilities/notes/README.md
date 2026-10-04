@@ -4,7 +4,11 @@ Leave little notes for each other. They pop up at the next login.
 
 - **Commands:**
   - `orbit note <text>` sends a note (up to 280 characters).
-  - `orbit notes` shows the last 20 notes from both of you.
+  - `orbit notes` shows the last 20 notes from both of you, numbered (1 is the oldest
+    note this machine still has).
+  - `orbit read` shows the newest note from the other person again, in their
+    character's bubble, the same as at login. `orbit read <n>` shows note #n from
+    `orbit notes` (yours or theirs). Reading an unread note marks it seen.
 - **At login:**
   1. Read receipts for your notes that were seen since last time, quoting the note
      ('Pluto read your note "lunch at 1?" ♥', or "Pluto read your 2 notes ♥").
