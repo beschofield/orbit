@@ -153,6 +153,7 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
         <dt>orbit greet</dt><dd>Show the login greeting again.</dd>
         <dt>orbit help</dt><dd>List every command, including ones you add later.</dd>
         <dt>orbit doctor</dt><dd>Check that everything works. It explains what's wrong and how to fix it.</dd>
+        <dt>orbit update</dt><dd>Get Becca's latest code. It restarts Orbit only when it needs to, and won't touch anything you haven't committed.</dd>
       </dl>
     </div>
 
@@ -208,7 +209,7 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
 
     <div class="block">
       <h3>Sharing it with Becca</h3>
-      <p>Code doesn't travel between the machines on its own; only notes and other events do. Commit and push your capability, and Becca runs <code>git pull</code> on charon. Orbit notices new capabilities within about 30 seconds, so nobody has to restart anything. <code>orbit doctor</code> tells you if one machine has something the other doesn't.</p>
+      <p>Code doesn't travel between the machines on its own; only notes and other events do. Commit and push your capability, and Becca runs <code>orbit update</code> on charon (you do the same when Becca pushes). It pulls the code and restarts Orbit only if the core changed; new capabilities show up within about 30 seconds. <code>orbit doctor</code> tells you if one machine is behind the other.</p>
     </div>
   </section>
 
@@ -226,7 +227,6 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
       <article class="idea"><h3>Question of the day</h3><p>One small question each morning. You both answer, and you see each other's answer once you've given yours.</p><div class="uses"><span class="tag">timer</span><span class="tag">login</span><span class="tag">synced events</span></div></article>
       <article class="idea"><h3>Lamp glow</h3><p>A Home Assistant light warms up when a note arrives. The <code>homeassistant</code> box is already on the tailnet.</p><div class="uses"><span class="tag">received</span><span class="tag">network</span></div></article>
       <article class="idea"><h3>Memory search</h3><p><code>orbit ask "what was that ramen place?"</code> searches your notes together.</p><div class="uses"><span class="tag">command</span></div></article>
-      <article class="idea"><h3><code>orbit update</code></h3><p>One command to pull the latest code and restart only if needed. It's already planned in <code>TODO.md</code>.</p><div class="uses"><span class="tag">core</span></div></article>
     </div>
     <p class="muted">The running list lives in <code>TODO.md</code>. Move an idea to “In progress” with your name when you pick it up.</p>
   </section>

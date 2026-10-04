@@ -29,6 +29,7 @@ to add a feature.
 | `orbit/prompt.py` | builds `~/.orbit/prompt` from each capability's segment |
 | `orbit/devtools.py` | `orbit dev run`, `orbit dev test`, `orbit dev peer` |
 | `orbit/doctor.py` | `orbit doctor` health checks |
+| `orbit/update.py` | `orbit update`: fast-forward the repo; restart orbitd only if the core changed |
 | `orbit/config.py` | `~/.orbit/config.json` (`$ORBIT_DIR` overrides the folder) |
 | `orbit/log.py` | append-only logs in `~/.orbit/logs/` |
 | `capabilities/` | one folder per capability: example, notes, presence, companions |
@@ -45,8 +46,9 @@ to add a feature.
 5. **Order by `seq` or arrival, never `ts`.** The two machines' clocks can differ.
 6. **Every error message says where, what, and how to fix it.**
 7. **Small files with one job each** (under about 300 lines), type hints, and docstrings that say *why*.
-8. **Capability code doesn't sync.** After changing a capability, remind the person
-   to install it on both machines. `orbit doctor` flags any mismatch.
+8. **Code doesn't sync.** After changing a capability or the core, remind the person
+   to push and run `orbit update` on the other machine. Bump `CORE_VERSION` in
+   `orbit/__init__.py` when `orbit/` changes in a way the other machine must match. `orbit doctor` flags any mismatch.
 9. **Wording:** the people are Becca and Gabby. Say "girlfriend", never a generic stand-in for her.
 10. **Close what you open.** Tests close every `Store`/runtime they open (`rt.store.close()`), and per-request threads call `store.release()`; `python3 -W error::ResourceWarning -m unittest` must stay clean.
 

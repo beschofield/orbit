@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import Iterator
 
-from orbit import CORE_VERSION, daemon, loader, sync
+from orbit import CORE_VERSION, config, daemon, loader, sync, update
 
 
 def main(rt: loader.Runtime, args: list[str]) -> int:
@@ -66,7 +67,10 @@ def checks(rt: loader.Runtime) -> Iterator[tuple[bool, str]]:
     yield True, f"{cfg.peer} is up (core {theirs.get('core_version')})"
     if theirs.get("core_version") != CORE_VERSION:
         yield False, (f"core versions differ: {cfg.me} has {CORE_VERSION}, {cfg.peer} has "
-                      f"{theirs.get('core_version')} — update both machines")
+                      f"{theirs.get('core_version')} — run `orbit update` on both machines")
+    behind = commit_mismatch(cfg.me, cfg.peer, update.current_commit(), theirs.get("commit"))
+    if behind:
+        yield False, behind
     mine_caps, their_caps = set(rt.manifests), set(theirs.get("capabilities", []))
     if mine_caps - their_caps:
         yield False, f"only on {cfg.me}: {', '.join(sorted(mine_caps - their_caps))} — install it on {cfg.peer} too"
@@ -77,3 +81,22 @@ def checks(rt: loader.Runtime) -> Iterator[tuple[bool, str]]:
         yield True, f"{cfg.peer} accepts requests from {cfg.me}"
     except sync.PeerError as e:
         yield False, f"{cfg.peer} refused to sync: {e}"
+
+
+def commit_mismatch(me: str, peer: str, mine: str | None, theirs: str | None,
+                    repo: Path = config.REPO_ROOT) -> str | None:
+    """Say which machine needs `orbit update`, or None if both run the same commit.
+
+    The older machine is the one whose commit is an ancestor of the other's. If this
+    checkout doesn't have the peer's commit at all, the peer has pushed something we
+    haven't pulled yet, so we're the one behind.
+    """
+    if not mine or not theirs or mine == theirs:
+        return None  # same code, or one side isn't a git checkout
+    where = f"{peer} is on {theirs}, {me} is on {mine}"
+    peer_older = update.is_ancestor(repo, theirs, mine)
+    if peer_older:
+        return f"{where} — run `orbit update` on {peer}"
+    if peer_older is None or update.is_ancestor(repo, mine, theirs):
+        return f"{where} — run `orbit update` on {me}"
+    return f"{where} — the two checkouts have diverged; push from one, then `orbit update` on the other"

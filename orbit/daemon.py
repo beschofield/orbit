@@ -16,7 +16,7 @@ import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from orbit import CORE_VERSION, loader, prompt, sync
+from orbit import CORE_VERSION, loader, prompt, sync, update
 from orbit.config import Config
 from orbit.log import log
 
@@ -77,7 +77,7 @@ class Authorizer:
 
 def health(rt: loader.Runtime) -> dict:
     return {"ok": True, "me": rt.cfg.me, "core_version": CORE_VERSION, "capabilities": sorted(rt.manifests),
-            "instance": rt.store.instance()}
+            "instance": rt.store.instance(), "commit": update.current_commit()}
 
 
 def make_handler(rt: loader.Runtime, auth: Authorizer, poke: threading.Event):

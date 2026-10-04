@@ -40,6 +40,18 @@ orbit doctor                    # check that everything works
 You need Python 3.11+, Tailscale, and both machines on the same tailnet, able to
 reach each other on port 1978.
 
+## Getting each other's changes
+
+Code doesn't travel between the machines; only notes and other events do. After one of
+you pushes, the other runs:
+
+```bash
+orbit update    # pulls the latest code; restarts orbitd only if the core changed
+```
+
+It refuses if you have uncommitted changes or your branch has diverged, and tells you
+what to do instead. `orbit doctor` says which machine is behind.
+
 ## Making it yours
 
 Orbit is built to grow. Each feature is a small **capability** in `capabilities/`,

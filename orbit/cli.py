@@ -1,6 +1,6 @@
 """`orbit <command>`: the entry point for people, bin/orbit, systemd and the shell snippet.
 
-The core commands live here. Every other command belongs to a capability (see `orbit help`).
+The core commands live here (`update` has its own module). Every other command belongs to a capability (see `orbit help`).
 `greet` runs at every new shell, so it stays quiet on errors (the bashrc sends its stderr
 to /dev/null), and the shell cuts it off after 1 s.
 """
@@ -21,6 +21,7 @@ CORE_COMMANDS = [
     ("greet", "show the login greeting"),
     ("help", "list commands"),
     ("doctor [--reset <capability>]", "check that everything works"),
+    ("update", "pull the latest code; restart orbitd if the core changed"),
     ("dev run|test|peer ...", "developer tools (run `orbit dev` for usage)"),
     ("daemon", "run orbitd (systemd does this for you)"),
     ("init --me <name> --peer <name> [--dev]", "write ~/.orbit/config.json"),
@@ -32,6 +33,9 @@ def main(argv: list[str] | None = None) -> int:
     cmd, args = (argv[0], argv[1:]) if argv else ("help", [])
     if cmd == "init":
         return init(args)
+    if cmd == "update":  # before config.load(): a broken config must not block pulling its fix
+        from orbit import update
+        return update.main(args)
     try:
         cfg = config.load()
     except ConfigError as e:

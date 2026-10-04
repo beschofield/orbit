@@ -96,5 +96,5 @@ Nothing in `~/.orbit` was touched. You can keep `~/orbit-test` for next time, or
 `rm -rf ~/orbit-test` to remove it.
 
 Once the branch is merged, update the real copy on **both** machines with
-`cd ~/Claude/orbit && git switch main && git pull`: capability code doesn't sync, and
+`orbit update` (from `main`): capability code doesn't sync, and
 `orbit doctor` flags a mismatch.
