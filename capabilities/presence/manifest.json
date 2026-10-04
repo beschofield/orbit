@@ -6,7 +6,7 @@
   "commands": [
     {"name": "away", "usage": "away [message]", "help": "Mark yourself away, with an optional short message."},
     {"name": "back", "usage": "back", "help": "Clear away; go back to automatic presence."},
-    {"name": "status", "usage": "status toggle|on|off", "help": "Hide or show your girlfriend's status in your prompt."}
+    {"name": "status", "usage": "status toggle|on|off|style <both|symbol|name>", "help": "Hide, show or restyle your girlfriend's status in your prompt."}
   ],
   "triggers": ["tick", "received"],
   "tick_seconds": 60,

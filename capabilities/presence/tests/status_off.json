@@ -2,7 +2,7 @@
   "description": "orbit status off hides the status (arguments are case-insensitive)",
   "input": {"trigger": {"kind": "command", "name": "status", "args": ["OFF"]}},
   "expect": {
-    "emit": [{"type": "presence.display", "data": {"shown": false}, "v": 1}],
+    "emit": [{"type": "presence.display", "data": {"shown": false, "style": "both"}, "v": 1}],
     "prompt": ""
   }
 }

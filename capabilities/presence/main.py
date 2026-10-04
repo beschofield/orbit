@@ -21,6 +21,12 @@ import time
 SYMBOL = {"pluto": "♇", "charon": "☾"}
 MAX_PROMPT = 40
 MAX_MESSAGE = 30
+# The prompt shows states as emoji; the event keeps the word, so an older install
+# still shows something sensible. Unknown states fall back to the word.
+EMOJI = {"active": "✨", "idle": "💭", "away": "⏳"}
+STYLES = ("both", "symbol", "name")
+DEFAULT_STYLE = "both"
+USAGE = "usage: orbit status toggle|on|off\n       orbit status style both|symbol|name"
 
 
 def idle_minutes(pts_dir: str = "/dev/pts", uid: int | None = None,
@@ -59,46 +65,70 @@ def printable(value: object) -> str:
     return "".join(ch for ch in str(value) if ch.isprintable())
 
 
-def prompt_text(inp: dict) -> str:
+def label(name: str, style: str) -> str:
+    """Who the segment is about: "♇ pluto" (both), "♇" (symbol) or "pluto" (name)."""
+    symbol = SYMBOL.get(name, "*")
+    return {"symbol": symbol, "name": name}.get(style, f"{symbol} {name}")
+
+
+def with_state(name: str, style: str, state: str) -> str:
+    """Label plus state: "♇ pluto: ✨", "♇ ✨" or "pluto: ✨" (a lone symbol reads better without the colon)."""
+    return f"{label(name, style)}{' ' if style == 'symbol' else ': '}{state}"
+
+
+def prompt_text(inp: dict, style: str = DEFAULT_STYLE) -> str:
     peer = inp["peer"]
     name = peer["name"]
-    symbol = SYMBOL.get(name, "*")
     if not peer["online"]:
-        return f"{symbol} {name}: 💤"
+        return with_state(name, style, "💤")
     status = inp["latest"].get(name, {}).get("presence.status")
     if not status:
-        return f"{symbol} {name}"
+        return label(name, style)
     data = status["data"]
-    text = f"{symbol} {name}: {printable(data.get('state', '?'))}"
+    state = printable(data.get("state", "?"))
+    text = with_state(name, style, EMOJI.get(state, state))
     if data.get("message"):
         text += f" ({printable(data['message'])})"
     return text if len(text) <= MAX_PROMPT else text[: MAX_PROMPT - 1] + "…"
 
 
-def shown(inp: dict) -> bool:
-    """Whether my prompt shows the peer's status; on until `orbit status off`."""
-    display = inp["latest"].get(inp["me"]["name"], {}).get("presence.display")
-    return not display or display["data"].get("shown", True) is not False
+def display(inp: dict) -> dict:
+    """My prompt settings, {shown, style}. No presence.display event yet means shown, both."""
+    event = inp["latest"].get(inp["me"]["name"], {}).get("presence.display")
+    data = event["data"] if event else {}
+    style = data.get("style")
+    return {"shown": data.get("shown", True) is not False,
+            "style": style if style in STYLES else DEFAULT_STYLE}
 
 
 def prompt_segment(inp: dict) -> str:
-    return prompt_text(inp) if shown(inp) else ""
+    settings = display(inp)
+    return prompt_text(inp, settings["style"]) if settings["shown"] else ""
 
 
 def status_command(inp: dict, args: list[str]) -> dict:
-    """`orbit status toggle` flips it; `orbit status on|off` sets it either way.
+    """`orbit status toggle|on|off` hides or shows; `orbit status style <style>` picks the look.
 
     Bare `orbit status` only prints usage: it reads like "show me the status", so
-    silently hiding the segment would surprise people.
+    silently hiding the segment would surprise people. Each event carries both
+    settings, so changing one keeps the other.
     """
-    choice = " ".join(args).strip().lower()
-    if choice not in ("toggle", "on", "off"):
-        return {"print": "usage: orbit status toggle|on|off"}
-    show = not shown(inp) if choice == "toggle" else choice == "on"
-    return {"emit": [{"type": "presence.display", "data": {"shown": show}}],
-            "prompt": prompt_text(inp) if show else "",
-            "print": "Status is back in your prompt." if show
-                     else "Status hidden from your prompt. Run `orbit status on` to show it again."}
+    words = [a.lower() for a in args]
+    settings = display(inp)
+    if words in (["toggle"], ["on"], ["off"]):
+        settings["shown"] = not settings["shown"] if words[0] == "toggle" else words[0] == "on"
+        message = ("Status is back in your prompt." if settings["shown"]
+                   else "Status hidden from your prompt. Run `orbit status on` to show it again.")
+    elif len(words) == 2 and words[0] == "style" and words[1] in STYLES:
+        settings["style"] = words[1]
+        message = f"Status style: {words[1]}, e.g. {with_state(inp['peer']['name'], words[1], EMOJI['active'])}"
+        if not settings["shown"]:
+            message += ". It's hidden right now; run `orbit status on` to see it."
+    else:
+        return {"print": USAGE}
+    return {"emit": [{"type": "presence.display", "data": settings}],
+            "prompt": prompt_text(inp, settings["style"]) if settings["shown"] else "",
+            "print": message}
 
 
 def status_event(state: str, manual: bool, message: str | None = None) -> dict:

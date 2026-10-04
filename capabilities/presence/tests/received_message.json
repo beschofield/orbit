@@ -4,5 +4,5 @@
     "trigger": {"kind": "received", "events": []},
     "latest": {"charon": {}, "pluto": {"presence.status": {"origin": "pluto", "seq": 3, "type": "presence.status", "ts": "2026-10-03T13:59:00Z", "v": 1, "data": {"state": "away", "manual": true, "message": "at the gym"}}}}
   },
-  "expect": {"prompt": "♇ pluto: away (at the gym)"}
+  "expect": {"prompt": "♇ pluto: ⏳ (at the gym)"}
 }
