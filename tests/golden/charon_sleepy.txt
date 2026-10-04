@@ -1,5 +1,5 @@
- .-------------------------------------.      .^^^^.  z
- | Hello from Orbit! This line is long |>    / -  - \ Z
- | enough to wrap onto a second line.  |    |   ..   |
+ .-------------------------------------.  ♥   .^^^^. z
+ | Hello from Orbit! This line is long |>    /- -   \ Z
+ | enough to wrap onto a second line.  |    |  .     |
  '-------------------------------------'     '.____.'
                                                Charon

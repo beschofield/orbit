@@ -1,6 +1,6 @@
-   .-~~~~-.       .-------------------------------------.
-  /  ^  ^  \     <| Hello from Orbit! This line is long |
- |   \__/   |     | enough to wrap onto a second line.  |
-  \   ♥    /      '-------------------------------------'
-   '-....-'
+    .-~~~~-.   o  .-------------------------------------.
+   /    ^ ^ \    <| Hello from Orbit! This line is long |
+  |     \_/  |    | enough to wrap onto a second line.  |
+   \   ♥     /    '-------------------------------------'
+    '-....-'
      Pluto
