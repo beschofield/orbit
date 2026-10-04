@@ -1,31 +1,33 @@
 # Testing a change on one machine
 
-How to try a branch (for example `feat/toggle-status`) on charon alone, with a fake
-pluto, without touching your real Orbit. Works the same on pluto with the names swapped.
+How to try a branch or PR (the examples use `feat/toggle-status`, PR #1) on charon
+alone, with a fake pluto, without touching your real Orbit. Works the same on pluto
+with the names swapped.
 
 ## Why it's set up this way
 
 - **Your real orbitd runs from `~/Claude/orbit`** (`orbit` in your PATH points at
   `~/Claude/orbit/bin/orbit`), and it picks up capability changes within 30 s. So
-  don't switch that checkout to the branch. Test from a separate checkout and run
-  its own `bin/orbit`, not plain `orbit`.
+  don't switch that checkout to the branch. Test from a second clone, `~/orbit-test`,
+  and run its own `bin/orbit`, not plain `orbit`.
 - **`ORBIT_DIR=~/.orbit-dev`** keeps test notes and statuses out of the real
   `~/.orbit`. The fake peer keeps its data in `~/.orbit-devpeer`.
 - The test daemon listens on `127.0.0.1:1978` and the fake peer on `127.0.0.1:1979`.
   Your real orbitd listens on your tailnet address, so they don't clash.
 
-## 1. Check out the branch somewhere else (once)
+## 1. Get the branch into a second clone
 
 ```bash
-cd ~/Claude/orbit
-git fetch origin
-git worktree add --detach ~/orbit-test origin/feat/toggle-status   # a second checkout of the branch
+git clone git@github.com:beschofield/orbit.git ~/orbit-test   # first time only
 cd ~/orbit-test
-rm -rf ~/.orbit-dev ~/.orbit-devpeer               # start from clean test data
+git fetch origin
+git switch feat/toggle-status      # or, for a PR: gh pr checkout 1
+git pull                           # pick up the newest commits
+rm -rf ~/.orbit-dev ~/.orbit-devpeer   # start from clean test data
 ```
 
-`--detach` works even if the branch is already checked out elsewhere. To pick up new
-commits later: `git fetch origin && git checkout --detach origin/feat/toggle-status`.
+To test a different branch later, run `git switch <branch>` (or `gh pr checkout <number>`)
+in `~/orbit-test`. Keep the clone around; it's only for testing.
 
 ## 2. Start the test daemon and the fake peer
 
@@ -88,8 +90,11 @@ python3 -m unittest            # everything, in under 30 s
 # Ctrl-C terminals 1 and 2, then:
 unset ORBIT_DIR
 rm -rf ~/.orbit-dev ~/.orbit-devpeer
-cd ~/Claude/orbit && git worktree remove ~/orbit-test
 ```
 
-Nothing in `~/.orbit` was touched. Once the branch is merged, pull it on **both**
-machines: capability code doesn't sync, and `orbit doctor` flags a mismatch.
+Nothing in `~/.orbit` was touched. You can keep `~/orbit-test` for next time, or
+`rm -rf ~/orbit-test` to remove it.
+
+Once the branch is merged, update the real copy on **both** machines with
+`cd ~/Claude/orbit && git switch main && git pull`: capability code doesn't sync, and
+`orbit doctor` flags a mismatch.
