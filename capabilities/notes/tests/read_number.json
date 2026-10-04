@@ -12,7 +12,7 @@
     ]
   },
   "expect": {
-    "say": [{"who": "charon", "mood": "love", "text": "✉ Note from Charon · Oct 3, 1:02 pm\nthank you!"}],
+    "say": [{"who": "charon", "mood": "love", "look": "side", "text": "✉ Note from Charon · Oct 3, 1:02 pm\nthank you!"}],
     "emit": []
   }
 }

@@ -1,9 +1,10 @@
 """ASCII Pluto and Charon with speech bubbles.
 
-Pluto sits on the left facing right and Charon on the right facing left, so a
-conversation looks like the two facing each other. Text is cleaned of control
-characters first: notes come from the other machine, and an escape code in a note
-must not be able to clear the screen or change colors.
+Pluto sits on the left and Charon on the right. Each bubble's `look` picks the art:
+"forward" looks at the person at the terminal, and "side" looks toward the other planet
+(Pluto right, Charon left), so a note being passed reads as the two facing each other.
+Text is cleaned of control characters first: notes come from the other machine, and
+an escape code in a note must not be able to clear the screen or change colors.
 """
 from __future__ import annotations
 
@@ -73,16 +74,21 @@ def _pad(s: str, width: int) -> str:
     return s + " " * max(0, width - display_width(s))
 
 
-def load_art(who: str, mood: str) -> list[str]:
-    for m in (mood, "neutral"):
-        path = ART_DIR / who / f"{m}.txt"
+def load_art(who: str, mood: str, look: str = "forward") -> list[str]:
+    """The art for one bubble, from orbit/art/<who>/<look>/<mood>.txt.
+
+    Falls back <look>/<mood> → <look>/neutral → forward/<mood> → forward/neutral, so a
+    new mood or look that's only partly drawn still shows something sensible.
+    """
+    for lk, m in ((look, mood), (look, "neutral"), ("forward", mood), ("forward", "neutral")):
+        path = ART_DIR / who / lk / f"{m}.txt"
         if path.is_file():
             return [line.rstrip() for line in path.read_text(encoding="utf-8").rstrip("\n").split("\n")]
     return [f"({who})"]
 
 
-def render(who: str, mood: str, text: str, color: bool = False) -> str:
-    art = load_art(who, mood) + [who.capitalize().center(ART_WIDTH).rstrip()]
+def render(who: str, mood: str, text: str, color: bool = False, look: str = "forward") -> str:
+    art = load_art(who, mood, look) + [who.capitalize().center(ART_WIDTH).rstrip()]
     lines = wrap(clean(text), BUBBLE_TEXT_WIDTH)
     inner = max(display_width(line) for line in lines)
     art_left = who == "pluto"
@@ -106,7 +112,7 @@ def render(who: str, mood: str, text: str, color: bool = False) -> str:
 
 
 def render_says(says: Sequence[Say], color: bool = False) -> str:
-    return "\n\n".join(render(s.who, s.mood, s.text, color) for s in says)
+    return "\n\n".join(render(s.who, s.mood, s.text, color, s.look) for s in says)
 
 
 DIVIDER = " " + "· " * 29  # 59 columns, the same width as a full bubble row

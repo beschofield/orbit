@@ -48,6 +48,9 @@ object out. Keep it stateless and work everything out from `inp["events"]` and
 - `tick` and `received` can't show bubbles; use `prompt` and `emit`.
 - Text from the other machine is untrusted. Keep `say.text` ≤ 280 and `prompt` ≤ 40
   printable characters.
+- `say` bubbles look forward, at the person at the terminal. Add `"look": "side"` only when
+  the bubble carries the other person's words or reaches toward them (notes does this for
+  sent and delivered notes); otherwise leave `look` out.
 - For anything time-based, order by `seq`, never `ts`.
 
 ## 5. Verify

@@ -19,6 +19,7 @@ COMMAND_RE = re.compile(r"^[a-z][a-z0-9-]{0,30}$")
 TYPE_RE = re.compile(r"^[a-z][a-z0-9_]{1,30}\.[a-z][a-z0-9_.]{0,60}$")
 WHO = ("pluto", "charon")
 MOODS = ("neutral", "happy", "sleepy", "love", "thinking", "worried")
+LOOKS = ("forward", "side")  # forward: at the person at the terminal; side: toward the other planet
 TRIGGERS = ("login", "tick", "received")
 KEEPS = ("log", "latest")
 RESERVED_COMMANDS = ("daemon", "dev", "doctor", "greet", "help", "init", "update")
@@ -62,6 +63,9 @@ class Say:
     who: str
     mood: str
     text: str
+    # Which way the planet looks. Last, with a default, so Say(who, mood, text) still works
+    # and a capability that leaves "look" out gets forward.
+    look: str = "forward"
 
 
 @dataclass(frozen=True)
@@ -279,6 +283,10 @@ def _says(raw: object, bad: Bad) -> tuple[Say, ...]:
         if s.get("mood") not in MOODS:
             bad(f"{where}.mood", f"must be one of: {', '.join(MOODS)}")
             ok = False
+        look = s.get("look", "forward")
+        if look not in LOOKS:
+            bad(f"{where}.look", 'must be "forward" or "side" (leave it out for "forward")')
+            ok = False
         text = s.get("text")
         if not isinstance(text, str) or not text.strip():
             bad(f"{where}.text", "must be a non-empty string")
@@ -287,7 +295,7 @@ def _says(raw: object, bad: Bad) -> tuple[Say, ...]:
             bad(f"{where}.text", f"is {len(text)} characters; the limit is {MAX_SAY_CHARS}")
             ok = False
         if ok:
-            out.append(Say(s["who"], s["mood"], text))
+            out.append(Say(s["who"], s["mood"], text, look))
     return tuple(out)
 
 
@@ -320,10 +328,19 @@ def _emits(raw: object, manifest: Manifest, bad: Bad) -> tuple[Emit, ...]:
     return tuple(out)
 
 
+def _say_to_dict(s: Say) -> dict:
+    """Leaves out look when it's forward, the same way capability authors write it, so test
+    cases and `orbit dev run` output don't need "look": "forward" everywhere."""
+    d = {"who": s.who, "mood": s.mood, "text": s.text}
+    if s.look != "forward":
+        d["look"] = s.look
+    return d
+
+
 def output_to_dict(out: Output) -> dict:
     """The comparable form of an Output, used by `orbit dev run` and test cases."""
     return {
-        "say": [{"who": s.who, "mood": s.mood, "text": s.text} for s in out.say],
+        "say": [_say_to_dict(s) for s in out.say],
         "emit": [{"type": e.type, "data": e.data, "v": e.v} for e in out.emit],
         "prompt": out.prompt,
         "print": out.print_text,

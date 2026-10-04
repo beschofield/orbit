@@ -23,7 +23,10 @@ def handle(inp: dict) -> dict:
             # "print": plain text for whoever ran the command.
             "print": f"hello, {name}!",
             # "say": speech bubbles. Use your own machine's character (inp["me"]["name"])
-            # unless the words come from the other person.
+            # unless the words come from the other person. Bubbles look forward, at the
+            # person at the terminal. Add "look": "side" to make the planet look toward the
+            # other one instead: do that when the bubble carries the other person's words
+            # or reaches toward them (notes does it for sent and delivered notes).
             "say": [{"who": inp["me"]["name"], "mood": "happy",
                      "text": f"Hi {name}! I'm a brand-new capability."}],
             # Other keys you can return:
