@@ -37,8 +37,11 @@ loginctl enable-linger $USER    # keeps orbitd running when you're logged out
 orbit doctor                    # check that everything works
 ```
 
-You need Python 3.11+, Tailscale, and both machines on the same tailnet, able to
-reach each other on port 1978.
+You need Python 3.11+, bash or zsh, Tailscale, and both machines on the same tailnet,
+able to reach each other on port 1978. The installer adds the greeting and prompt block
+to `~/.bashrc`, and to `~/.zshrc` too when zsh is your shell or that file exists. If your
+dotfiles manage `~/.zshrc`, copy the block from `shell/orbit.zsh` into them, at the very
+end, so re-running the installer leaves the file unchanged.
 
 ## Getting each other's changes
 

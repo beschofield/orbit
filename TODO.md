@@ -46,7 +46,6 @@ is to carry it in the peer status. `doctor.commit_mismatch` already works out wh
 - **Memory search:** `orbit ask "what was that ramen place?"` over shared notes.
 - **Home Assistant:** a lamp glows when a note arrives. There's a `homeassistant` node
   on the tailnet.
-- **zsh support** for the greeting and prompt block, if either of you switches shells.
 
 ## In progress
 
