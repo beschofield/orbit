@@ -7,6 +7,8 @@ and the time it was sent, then marked notes.seen.
 The sender then gets a read receipt at their next login (marked notes.receipts_shown).
 `orbit notes` lists recent notes, numbered; `orbit read [n]` shows one again in its
 sender's bubble (default: the newest one received), marking it seen if it wasn't.
+`orbit unread` says every unread note at once. Login says at most MAX_SHOWN and leaves
+the rest unread (still counted in the prompt) so `orbit unread` can show them later.
 Bubbles that pass a note between the planets (sent, delivered, or shown again by
 `orbit read`) look to the side, toward the other planet; the read receipt is news for
 you, so it faces forward (no "look").
@@ -20,7 +22,7 @@ import json
 import sys
 
 MAX_NOTE = 280  # the speech-bubble limit, so a note always fits in one bubble
-MAX_SHOWN = 5   # notes said at one login; the rest are summarized
+MAX_SHOWN = 5   # notes said at one login; the rest are summarized and stay unread
 NAMES = {"pluto": "Pluto", "charon": "Charon"}
 
 
@@ -142,6 +144,16 @@ def read(inp: dict, args: list[str]) -> dict:
     return out
 
 
+def say_unread(inp: dict) -> dict:
+    """Say every unread note, oldest first, with no MAX_SHOWN limit, and mark them all seen."""
+    notes = unread(inp)
+    if not notes:
+        return {"print": f"No unread notes from {NAMES[inp['peer']['name']]}. See everything with: orbit notes"}
+    return {"say": [{"who": e["origin"], "mood": "love", "look": "side", "text": incoming(e, inp)} for e in notes],
+            "emit": [{"type": "notes.seen", "data": {"seqs": [e["seq"] for e in notes]}}],
+            "prompt": ""}
+
+
 def login(inp: dict) -> dict:
     me, peer = inp["me"]["name"], inp["peer"]["name"]
     say: list[dict] = []
@@ -150,21 +162,23 @@ def login(inp: dict) -> dict:
     if receipts:  # first, so news about your notes isn't mixed up with hers
         say.append({"who": me, "mood": "happy", "text": receipt_text(peer, receipts, inp)})
         emit.append({"type": "notes.receipts_shown", "data": {"seqs": receipts}})
-    notes = unread(inp)
-    for e in notes[:MAX_SHOWN]:
+    waiting = unread(inp)
+    notes, rest = waiting[:MAX_SHOWN], len(waiting) - MAX_SHOWN
+    for e in notes:
         say.append({"who": peer, "mood": "love", "look": "side", "text": incoming(e, inp)})
-    if len(notes) > MAX_SHOWN:
+    if rest > 0:  # left unread, so the prompt keeps counting them until `orbit unread`
         say.append({"who": peer, "mood": "happy", "look": "side",
-                    "text": f"…and {len(notes) - MAX_SHOWN} more. See them all with: orbit notes"})
+                    "text": f"…and {rest} more. Read {'it' if rest == 1 else 'them'} with: orbit unread"})
     if notes:
         emit.append({"type": "notes.seen", "data": {"seqs": [e["seq"] for e in notes]}})
-    return {"say": say, "emit": emit, "prompt": ""}
+    return {"say": say, "emit": emit, "prompt": f"✉  {rest}" if rest > 0 else ""}
 
 
 def handle(inp: dict) -> dict:
     trigger = inp["trigger"]
     if trigger["kind"] == "command":
-        commands = {"note": send, "read": read, "notes": lambda inp, _: history(inp)}
+        commands = {"note": send, "read": read, "notes": lambda inp, _: history(inp),
+                    "unread": lambda inp, _: say_unread(inp)}
         return commands[trigger["name"]](inp, trigger["args"])
     if trigger["kind"] == "login":
         return login(inp)

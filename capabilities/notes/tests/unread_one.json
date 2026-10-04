@@ -1,0 +1,14 @@
+{
+  "description": "orbit unread with one unread note says it and clears the prompt",
+  "input": {
+    "trigger": {"kind": "command", "name": "unread", "args": []},
+    "events": [
+      {"origin": "pluto", "seq": 1, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "lunch at 1?"}}
+    ]
+  },
+  "expect": {
+    "say": [{"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:00 pm\nlunch at 1?"}],
+    "emit": [{"type": "notes.seen", "data": {"seqs": [1]}, "v": 1}],
+    "prompt": ""
+  }
+}

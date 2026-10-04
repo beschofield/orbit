@@ -1,0 +1,11 @@
+{
+  "description": "orbit unread with nothing unread points to orbit notes",
+  "input": {
+    "trigger": {"kind": "command", "name": "unread", "args": []},
+    "events": [
+      {"origin": "pluto", "seq": 1, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "old news"}},
+      {"origin": "charon", "seq": 1, "type": "notes.seen", "ts": "2026-10-03T13:10:00Z", "v": 1, "data": {"seqs": [1]}}
+    ]
+  },
+  "expect": {"print": "No unread notes from Pluto. See everything with: orbit notes"}
+}

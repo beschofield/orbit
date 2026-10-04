@@ -146,6 +146,7 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
         <dt>orbit note "lunch at 1?"</dt><dd>Send Becca a note. It pops up on charon at her next terminal. Up to 280 characters, emoji welcome.</dd>
         <dt>orbit notes</dt><dd>See the last 20 notes from both of you, numbered.</dd>
         <dt>orbit read</dt><dd>Show Becca's latest note again, in Charon's bubble. Add a number from <code>orbit notes</code> (like <code>orbit read 3</code>) to see that one instead.</dd>
+        <dt>orbit unread</dt><dd>Read every note from Becca you haven't seen yet, oldest first. Handy when <code>✉</code> shows up in your prompt.</dd>
         <dt>orbit away "at the gym"</dt><dd>Mark yourself away, with an optional short message. It sticks until you come back.</dd>
         <dt>orbit back</dt><dd>Go back to automatic presence: active, idle or away, based on when you last typed.</dd>
         <dt>orbit status toggle</dt><dd>Hide Becca's status from your prompt; run it again to bring it back.</dd>
@@ -168,7 +169,7 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
         <span class="chip">☾ charon: 💤</span>
         <span class="chip">✉ 2</span>
       </div>
-      <p class="muted">✨ means Becca is active, 💭 idle, and ⏳ away. 💤 means charon is switched off or unreachable. ✉ counts notes you haven't seen yet; open a new terminal to read them.</p>
+      <p class="muted">✨ means Becca is active, 💭 idle, and ⏳ away. 💤 means charon is switched off or unreachable. ✉ counts notes you haven't seen yet; run <code>orbit unread</code> to read them all.</p>
     </div>
   </section>
 

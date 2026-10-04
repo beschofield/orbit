@@ -6,7 +6,8 @@
   "commands": [
     {"name": "note", "usage": "note <text>", "help": "Send a note to your girlfriend."},
     {"name": "notes", "usage": "notes", "help": "Show the last 20 notes, numbered."},
-    {"name": "read", "usage": "read [n]", "help": "Show a note again: the newest from your girlfriend, or #n from orbit notes."}
+    {"name": "read", "usage": "read [n]", "help": "Show a note again: the newest from your girlfriend, or #n from orbit notes."},
+    {"name": "unread", "usage": "unread", "help": "Read all your unread notes from your girlfriend."}
   ],
   "triggers": ["login", "received"],
   "tick_seconds": null,

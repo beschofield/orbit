@@ -1,0 +1,30 @@
+{
+  "description": "orbit unread says every unread note, oldest first, with no limit of five, and marks them all seen",
+  "input": {
+    "trigger": {"kind": "command", "name": "unread", "args": []},
+    "events": [
+      {"origin": "pluto", "seq": 1, "type": "notes.sent", "ts": "2026-10-03T12:00:00Z", "v": 1, "data": {"text": "already seen"}},
+      {"origin": "charon", "seq": 1, "type": "notes.seen", "ts": "2026-10-03T12:10:00Z", "v": 1, "data": {"seqs": [1]}},
+      {"origin": "pluto", "seq": 2, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "one"}},
+      {"origin": "pluto", "seq": 3, "type": "notes.sent", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"text": "two"}},
+      {"origin": "pluto", "seq": 4, "type": "notes.sent", "ts": "2026-10-03T13:02:00Z", "v": 1, "data": {"text": "three"}},
+      {"origin": "pluto", "seq": 5, "type": "notes.sent", "ts": "2026-10-03T13:03:00Z", "v": 1, "data": {"text": "four"}},
+      {"origin": "pluto", "seq": 6, "type": "notes.sent", "ts": "2026-10-03T13:04:00Z", "v": 1, "data": {"text": "five"}},
+      {"origin": "pluto", "seq": 7, "type": "notes.sent", "ts": "2026-10-03T13:05:00Z", "v": 1, "data": {"text": "six"}},
+      {"origin": "pluto", "seq": 8, "type": "notes.sent", "ts": "2026-10-03T13:06:00Z", "v": 1, "data": {"text": "seven"}}
+    ]
+  },
+  "expect": {
+    "say": [
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:00 pm\none"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:01 pm\ntwo"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:02 pm\nthree"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:03 pm\nfour"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:04 pm\nfive"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:05 pm\nsix"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:06 pm\nseven"}
+    ],
+    "emit": [{"type": "notes.seen", "data": {"seqs": [2, 3, 4, 5, 6, 7, 8]}, "v": 1}],
+    "prompt": ""
+  }
+}
