@@ -61,8 +61,10 @@ bin/orbit doctor                                     # config, daemon, peer, man
 
 ## Testing with two machines on one computer
 
+Step-by-step guide for trying a branch: `docs/testing-on-one-machine.md`.
+
 Use a separate data folder, so test notes, cursors and fake-pluto events never land in
-the real `~/.orbit` (they would confuse the real pluto on reveal day). Set it in every
+the real `~/.orbit` (they would sync to the real pluto). Set it in every
 terminal you use for testing:
 
 ```bash

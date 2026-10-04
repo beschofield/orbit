@@ -5,10 +5,11 @@
   "run": "main.py",
   "commands": [
     {"name": "away", "usage": "away [message]", "help": "Mark yourself away, with an optional short message."},
-    {"name": "back", "usage": "back", "help": "Clear away; go back to automatic presence."}
+    {"name": "back", "usage": "back", "help": "Clear away; go back to automatic presence."},
+    {"name": "status", "usage": "status toggle | style <both|symbol|name>", "help": "Toggle (hide or show) or restyle your girlfriend's status in your prompt."}
   ],
   "triggers": ["tick", "received"],
   "tick_seconds": 60,
-  "event_types": {"presence.status": {"keep": "latest"}},
+  "event_types": {"presence.status": {"keep": "latest"}, "presence.display": {"keep": "latest"}},
   "receives": ["presence.status"]
 }

@@ -137,7 +137,7 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
  | good luck today! ♥           |  <span class="ch">  |  \__/  |</span>
  '------------------------------'  <span class="ch">   '.____.'</span>
                                    <span class="ch">     Charon</span>
-<span class="dim">☾ charon: active  ~$</span></pre>
+<span class="dim">☾ charon: ✨  ~$</span></pre>
     </div>
 
     <div class="block">
@@ -147,6 +147,8 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
         <dt>orbit notes</dt><dd>See the last 20 notes from both of you.</dd>
         <dt>orbit away "at the gym"</dt><dd>Mark yourself away, with an optional short message. It sticks until you come back.</dd>
         <dt>orbit back</dt><dd>Go back to automatic presence: active, idle or away, based on when you last typed.</dd>
+        <dt>orbit status toggle</dt><dd>Hide Becca's status from your prompt; run it again to bring it back.</dd>
+        <dt>orbit status style name</dt><dd>Change how Becca is labelled: <code>both</code> (<code>☾ charon: ✨</code>, the default), <code>symbol</code> (<code>☾ ✨</code>) or <code>name</code> (<code>charon: ✨</code>).</dd>
         <dt>orbit hi</dt><dd>Say hi to Pluto.</dd>
         <dt>orbit greet</dt><dd>Show the login greeting again.</dd>
         <dt>orbit help</dt><dd>List every command, including ones you add later.</dd>
@@ -158,12 +160,13 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
       <h2>Your prompt</h2>
       <p>The start of your shell prompt shows how Becca is doing. It's read from a file, so it never slows your shell down.</p>
       <div class="prompt-legend">
-        <span class="chip">☾ charon: active</span>
-        <span class="chip">☾ charon: away (lunch)</span>
+        <span class="chip">☾ charon: ✨</span>
+        <span class="chip">☾ charon: 💭</span>
+        <span class="chip">☾ charon: ⏳ (lunch)</span>
         <span class="chip">☾ charon: 💤</span>
         <span class="chip">✉ 2</span>
       </div>
-      <p class="muted">💤 means charon is switched off or unreachable. ✉ counts notes you haven't seen yet; open a new terminal to read them.</p>
+      <p class="muted">✨ means Becca is active, 💭 idle, and ⏳ away. 💤 means charon is switched off or unreachable. ✉ counts notes you haven't seen yet; open a new terminal to read them.</p>
     </div>
   </section>
 

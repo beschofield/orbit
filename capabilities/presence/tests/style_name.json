@@ -1,0 +1,12 @@
+{
+  "description": "orbit status style name drops the symbol; an offline peer shows asleep",
+  "input": {
+    "trigger": {"kind": "command", "name": "status", "args": ["Style", "NAME"]},
+    "peer": {"name": "pluto", "online": false, "last_seen": null}
+  },
+  "expect": {
+    "emit": [{"type": "presence.display", "data": {"shown": true, "style": "name"}, "v": 1}],
+    "prompt": "pluto: 💤",
+    "print": "Status style: name, e.g. pluto: ✨"
+  }
+}

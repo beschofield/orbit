@@ -1,0 +1,12 @@
+{
+  "description": "orbit status style symbol shows just the symbol and the state emoji",
+  "input": {
+    "trigger": {"kind": "command", "name": "status", "args": ["style", "symbol"]},
+    "latest": {"charon": {}, "pluto": {"presence.status": {"origin": "pluto", "seq": 3, "type": "presence.status", "ts": "2026-10-03T13:59:00Z", "v": 1, "data": {"state": "active", "manual": false}}}}
+  },
+  "expect": {
+    "emit": [{"type": "presence.display", "data": {"shown": true, "style": "symbol"}, "v": 1}],
+    "prompt": "♇ ✨",
+    "print": "Status style: symbol, e.g. ♇ ✨"
+  }
+}
