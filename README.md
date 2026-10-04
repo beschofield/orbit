@@ -20,7 +20,8 @@ terminal companion, and the two keep each other company over the tailnet.
 - **Notes:** `orbit note "lunch at 1?"` pops up on the other machine at the next
   login. You get a read receipt when it's been seen.
 - **Presence:** your prompt shows your girlfriend's state, `♇ pluto: active`, or `💤`
-  when her machine is asleep. Use `orbit away gym` and `orbit back` to set it by hand.
+  when her machine is asleep. Use `orbit away gym` and `orbit back` to set it by hand,
+  and `orbit status` to hide or show it.
 - `orbit hi` for a friendly line, and `orbit help` for everything else.
 
 ## Install (on each machine)

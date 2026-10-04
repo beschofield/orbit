@@ -6,6 +6,9 @@ presence.status (keep: latest) only when it changes. `orbit away [message]` sets
 manual state that sticks until `orbit back`.
 tick and received: rebuild the prompt from the peer's latest status. The text comes
 from the other machine, so control characters are stripped.
+`orbit status [on|off]` hides or shows the segment. The choice is a presence.display
+event (keep: latest), because capabilities keep no state of their own. Hiding only
+affects my prompt: my own status keeps going to the peer.
 Contract: docs/capability-contract.md
 """
 from __future__ import annotations
@@ -72,6 +75,28 @@ def prompt_text(inp: dict) -> str:
     return text if len(text) <= MAX_PROMPT else text[: MAX_PROMPT - 1] + "…"
 
 
+def shown(inp: dict) -> bool:
+    """Whether my prompt shows the peer's status; on until `orbit status off`."""
+    display = inp["latest"].get(inp["me"]["name"], {}).get("presence.display")
+    return not display or display["data"].get("shown", True) is not False
+
+
+def prompt_segment(inp: dict) -> str:
+    return prompt_text(inp) if shown(inp) else ""
+
+
+def status_command(inp: dict, args: list[str]) -> dict:
+    """`orbit status` toggles; `orbit status on|off` sets it either way."""
+    choice = " ".join(args).strip().lower()
+    if choice not in ("", "on", "off"):
+        return {"print": "usage: orbit status [on|off]"}
+    show = not shown(inp) if choice == "" else choice == "on"
+    return {"emit": [{"type": "presence.display", "data": {"shown": show}}],
+            "prompt": prompt_text(inp) if show else "",
+            "print": "Status is back in your prompt." if show
+                     else "Status hidden from your prompt. Run `orbit status` to show it again."}
+
+
 def status_event(state: str, manual: bool, message: str | None = None) -> dict:
     data: dict = {"state": state, "manual": manual}
     if message:
@@ -81,7 +106,7 @@ def status_event(state: str, manual: bool, message: str | None = None) -> dict:
 
 def tick(inp: dict, idle: int | None = None) -> dict:
     """`idle` (minutes) lets tests skip reading /dev/pts."""
-    out: dict = {"prompt": prompt_text(inp)}
+    out: dict = {"prompt": prompt_segment(inp)}
     mine = inp["latest"].get(inp["me"]["name"], {}).get("presence.status")
     if mine and mine["data"].get("manual"):
         return out
@@ -99,10 +124,12 @@ def handle(inp: dict) -> dict:
                 "print": f"You're away{': ' + message if message else ''}. Run `orbit back` when you return."}
     if trigger["kind"] == "command" and trigger["name"] == "back":
         return {"emit": [status_event("active", False)], "print": "Welcome back!"}
+    if trigger["kind"] == "command" and trigger["name"] == "status":
+        return status_command(inp, trigger["args"])
     if trigger["kind"] == "tick":
         return tick(inp)
     if trigger["kind"] == "received":
-        return {"prompt": prompt_text(inp)}
+        return {"prompt": prompt_segment(inp)}
     return {}
 
 
