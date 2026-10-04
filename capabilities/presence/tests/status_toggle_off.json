@@ -4,6 +4,6 @@
   "expect": {
     "emit": [{"type": "presence.display", "data": {"shown": false, "style": "both"}, "v": 1}],
     "prompt": "",
-    "print": "Status hidden from your prompt. Run `orbit status on` to show it again."
+    "print": "Status hidden from your prompt. Run `orbit status toggle` to show it again."
   }
 }

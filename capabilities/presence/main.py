@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""presence — shows the other person's state in your prompt, e.g. "♇ pluto: active".
+"""presence — shows the other person's state in your prompt, e.g. "♇ pluto: ✨" (active).
 
 tick (every 60 s): work out my own state from terminal idle time (/dev/pts atimes), and emit
 presence.status (keep: latest) only when it changes. `orbit away [message]` sets a
 manual state that sticks until `orbit back`.
 tick and received: rebuild the prompt from the peer's latest status. The text comes
 from the other machine, so control characters are stripped.
-`orbit status toggle|on|off` hides or shows the segment. The choice is a presence.display
-event (keep: latest), because capabilities keep no state of their own. Hiding only
-affects my prompt: my own status keeps going to the peer.
+`orbit status toggle` hides or shows the segment, and `orbit status style` picks its
+label. Both live in a presence.display event (keep: latest), because capabilities keep
+no state of their own. Hiding only affects my prompt: my own status keeps going to the peer.
 Contract: docs/capability-contract.md
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ MAX_MESSAGE = 30
 EMOJI = {"active": "✨", "idle": "💭", "away": "⏳"}
 STYLES = ("both", "symbol", "name")
 DEFAULT_STYLE = "both"
-USAGE = "usage: orbit status toggle|on|off\n       orbit status style both|symbol|name"
+USAGE = "usage: orbit status toggle\n       orbit status style both|symbol|name"
 
 
 def idle_minutes(pts_dir: str = "/dev/pts", uid: int | None = None,
@@ -107,23 +107,24 @@ def prompt_segment(inp: dict) -> str:
 
 
 def status_command(inp: dict, args: list[str]) -> dict:
-    """`orbit status toggle|on|off` hides or shows; `orbit status style <style>` picks the look.
+    """`orbit status toggle` hides or shows; `orbit status style <style>` picks the look.
 
-    Bare `orbit status` only prints usage: it reads like "show me the status", so
-    silently hiding the segment would surprise people. Each event carries both
-    settings, so changing one keeps the other.
+    Toggle is the only way to hide or show, so there's one command to remember. Bare
+    `orbit status` only prints usage: it reads like "show me the status", so silently
+    hiding the segment would surprise people. Each event carries both settings, so
+    changing one keeps the other.
     """
     words = [a.lower() for a in args]
     settings = display(inp)
-    if words in (["toggle"], ["on"], ["off"]):
-        settings["shown"] = not settings["shown"] if words[0] == "toggle" else words[0] == "on"
+    if words == ["toggle"]:
+        settings["shown"] = not settings["shown"]
         message = ("Status is back in your prompt." if settings["shown"]
-                   else "Status hidden from your prompt. Run `orbit status on` to show it again.")
+                   else "Status hidden from your prompt. Run `orbit status toggle` to show it again.")
     elif len(words) == 2 and words[0] == "style" and words[1] in STYLES:
         settings["style"] = words[1]
         message = f"Status style: {words[1]}, e.g. {with_state(inp['peer']['name'], words[1], EMOJI['active'])}"
         if not settings["shown"]:
-            message += ". It's hidden right now; run `orbit status on` to see it."
+            message += ". It's hidden right now; run `orbit status toggle` to see it."
     else:
         return {"print": USAGE}
     return {"emit": [{"type": "presence.display", "data": settings}],

@@ -9,8 +9,8 @@ parentheses), and 💤 means the other machine can't be reached. Unknown states 
     characters. It sticks until you run `orbit back`.
   - `orbit back` returns you to automatic presence.
   - `orbit status toggle` hides your girlfriend's status from your prompt, or shows it
-    again if it's hidden. `orbit status on` and `orbit status off` set it either
-    way. It only changes your own prompt: she still sees yours.
+    again if it's hidden. It's the only way to hide or show it (there's no `on` or
+    `off`). It only changes your own prompt: she still sees yours.
   - `orbit status style both|symbol|name` picks how she's labelled: `♇ pluto: ✨`
     (both, the default), `♇ ✨` (symbol) or `pluto: ✨` (name).
 - **Every 60 s (tick):** works out your state from terminal idle time (how long since

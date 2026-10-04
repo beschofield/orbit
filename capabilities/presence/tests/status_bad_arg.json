@@ -1,5 +1,5 @@
 {
   "description": "orbit status with an unknown argument prints usage and changes nothing",
   "input": {"trigger": {"kind": "command", "name": "status", "args": ["maybe"]}},
-  "expect": {"emit": [], "prompt": null, "print": "usage: orbit status toggle|on|off\n       orbit status style both|symbol|name"}
+  "expect": {"emit": [], "prompt": null, "print": "usage: orbit status toggle\n       orbit status style both|symbol|name"}
 }
