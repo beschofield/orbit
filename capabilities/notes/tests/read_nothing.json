@@ -1,0 +1,10 @@
+{
+  "description": "orbit read before Pluto has sent anything",
+  "input": {
+    "trigger": {"kind": "command", "name": "read", "args": []},
+    "events": [
+      {"origin": "charon", "seq": 1, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "hi"}}
+    ]
+  },
+  "expect": {"say": [], "emit": [], "print": "No notes from Pluto yet. See everything with: orbit notes"}
+}

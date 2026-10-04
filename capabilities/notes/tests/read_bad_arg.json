@@ -1,0 +1,5 @@
+{
+  "description": "orbit read with something that isn't a number shows usage",
+  "input": {"trigger": {"kind": "command", "name": "read", "args": ["latest"]}},
+  "expect": {"say": [], "emit": [], "print": "usage: orbit read [n]    e.g. orbit read (newest from Pluto), orbit read 3 (#3 in orbit notes)"}
+}
