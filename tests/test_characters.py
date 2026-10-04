@@ -26,6 +26,19 @@ class ArtTest(unittest.TestCase):
                         self.assertLessEqual(max(display_width(line) for line in lines), characters.ART_WIDTH)
 
 
+    def test_no_art_outside_a_look_folder(self):
+        # orbit/art/<who>/<mood>.txt is the old layout: a file there is never shown.
+        for who in WHO:
+            stray = sorted(p.name for p in (characters.ART_DIR / who).glob("*.txt"))
+            self.assertEqual(stray, [], f"move these into orbit/art/{who}/forward/ or side/")
+
+    def test_art_readme_describes_every_look(self):
+        readme = (characters.ART_DIR / "README.md").read_text(encoding="utf-8")
+        for look in LOOKS:
+            self.assertIn(f"{look}/", readme)
+        self.assertIn("look='side'", readme)  # a preview for the side art too
+
+
 class RenderTest(unittest.TestCase):
     def test_forward_faces_the_person_at_the_terminal(self):
         p = characters.render("pluto", "happy", "hi").split("\n")[1]

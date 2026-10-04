@@ -1,18 +1,28 @@
 # Character art
 
-Each character has one plain-text file per mood:
+Each character has two looks, with one plain-text file per mood in each:
 
 ```
-pluto/   neutral.txt  happy.txt  sleepy.txt  love.txt  thinking.txt  worried.txt
-charon/  neutral.txt  happy.txt  sleepy.txt  love.txt  thinking.txt  worried.txt
+pluto/forward/   neutral.txt  happy.txt  sleepy.txt  love.txt  thinking.txt  worried.txt
+pluto/side/      neutral.txt  happy.txt  sleepy.txt  love.txt  thinking.txt  worried.txt
+charon/forward/  neutral.txt  happy.txt  sleepy.txt  love.txt  thinking.txt  worried.txt
+charon/side/     neutral.txt  happy.txt  sleepy.txt  love.txt  thinking.txt  worried.txt
 ```
 
-Edit those files. No code changes are needed.
+- `forward/` looks at the person at the terminal. Most bubbles use it.
+- `side/` looks toward the other planet: Pluto (on the left) looks right, Charon (on the
+  right) looks left, and each carries a tiny version of the other in that corner. Bubbles
+  that pass a note between the two use it.
+
+A capability picks the look per bubble with `"look": "side"` (see
+`docs/capability-contract.md`). Edit these files. No code changes are needed.
 
 ## Rules (a test checks them)
 
 - At most **6 lines** and **16 columns** per file. The name label goes under the art automatically.
-- All six moods must exist for both characters. A missing mood falls back to `neutral.txt`.
+- All six moods must exist in both looks for both characters.
+- Art files go in a look folder. A file directly in `pluto/` or `charon/` is never shown.
+- Missing art falls back in this order: `<look>/<mood>`, `<look>/neutral`, `forward/<mood>`, `forward/neutral`.
 - Wide characters such as emoji count as 2 columns. `♥` counts as 1.
 
 ## Preview
@@ -21,6 +31,7 @@ From the repo root:
 
 ```bash
 python3 -c "from orbit import characters; print(characters.render('pluto','happy','testing my new art!'))"
+python3 -c "from orbit import characters; print(characters.render('pluto','happy','testing my new art!', look='side'))"
 ```
 
 ## When you like it
