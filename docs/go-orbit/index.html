@@ -46,6 +46,8 @@ header.hero { display: grid; grid-template-columns: 1fr 180px; gap: 24px; align-
 .hero .text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 canvas#orbit { width: 180px; height: 180px; max-width: 100%; }
+.start { display: inline-block; font: 700 1rem var(--font-display); color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--pluto); padding-bottom: 2px; }
+.start:hover, .start:focus-visible { color: var(--pluto); }
 .facts { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) { header.hero { grid-template-columns: 1fr; } canvas#orbit { justify-self: center; } }
 
@@ -103,6 +105,7 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
       <span class="eyebrow">pluto ⇄ charon · port 1978</span>
       <h1>Pluto and Charon now keep each other company.</h1>
       <p>Your machine and Becca's each have a little terminal companion. They say hi when you open a terminal, pass notes between you, and show whether the other one is around.</p>
+      <p><a class="start" href="https://github.com/beschofield/orbit/blob/main/docs/reveal.md">Start here: set up pluto and test it with Becca →</a></p>
       <p class="facts">Pluto and Charon are tidally locked: they always show each other the same face, and they circle a point in the space between them, about 19,600&nbsp;km apart, once every 6.39&nbsp;days. Charon was found in 1978, which is why Orbit listens on port 1978.</p>
     </div>
     <canvas id="orbit" width="360" height="360" role="img" aria-label="Pluto and Charon orbiting a shared point between them"></canvas>
@@ -231,7 +234,7 @@ footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
       <h2>Documentation</h2>
       <p>This page is coming soon. For now, everything lives in the repo:</p>
       <ul>
-        <li><code>docs/reveal.md</code>: start here. Setting up pluto and testing it with Becca</li>
+        <li><a href="https://github.com/beschofield/orbit/blob/main/docs/reveal.md"><code>docs/reveal.md</code></a>: start here. Setting up pluto and testing it with Becca</li>
         <li><code>README.md</code>: the story and how to install</li>
         <li><code>CLAUDE.md</code>: the map of the code and the rules, for Claude and for you</li>
         <li><code>docs/capability-contract.md</code>: exactly what a capability receives and returns</li>
