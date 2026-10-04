@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
-from orbit import characters, config, loader, sync
+from orbit import characters, config, loader, sync, tailnet
 from orbit.config import ConfigError
 from orbit.contract import Output
 from orbit.log import log
@@ -167,6 +167,8 @@ def init(args: list[str]) -> int:
                   "`export ORBIT_DIR=~/.orbit-dev` first to keep test data out of it", file=sys.stderr)
         values.update(bind="127.0.0.1", peer_url=f"http://127.0.0.1:{config.DEV_PEER_PORT}",
                       dev_allow_ips=["127.0.0.1"])
+    elif suffix := tailnet.magicdns_suffix():
+        values["peer_host"] = f"{a.peer}.{suffix}"  # the bare name can resolve to the peer's LAN address
     print(f"wrote {config.write(directory, values)}")
     return 0
 

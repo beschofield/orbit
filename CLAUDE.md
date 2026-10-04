@@ -32,6 +32,7 @@ to add a feature.
 | `orbit/update.py` | `orbit update`: fast-forward the repo; restart orbitd only if the core changed |
 | `orbit/config.py` | `~/.orbit/config.json` (`$ORBIT_DIR` overrides the folder) |
 | `orbit/log.py` | append-only logs in `~/.orbit/logs/` |
+| `orbit/tailnet.py` | MagicDNS suffix and tailnet-address checks, so the peer is reached over Tailscale |
 | `capabilities/` | one folder per capability: example, notes, presence, companions |
 | `shell/orbit.bash`, `shell/orbit.zsh` | the `~/.bashrc` and `~/.zshrc` blocks; `install.sh` installs them |
 | `tests/` | `unittest` suites; `tests/fixtures/capabilities/ping` is a test-only capability |
