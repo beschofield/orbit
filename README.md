@@ -6,11 +6,11 @@ they circle a point in the space *between* them. These two machines, **pluto**
 terminal companion, and the two keep each other company over the tailnet.
 
 ```
-   .-~~~~-.       .----------------------.
-  /  ♥  ♥  \     <| lunch at 1?          |
- |   \__/   |     '----------------------'
-  \   ♥    /
-   '-....-'
+    .-~~~~-.   o  .-------------.
+   /    ♥ ♥ \    <| lunch at 1? |
+  |     \_/  |    '-------------'
+   \   ♥     /
+    '-....-'
      Pluto
 ```
 

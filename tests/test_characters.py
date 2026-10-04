@@ -25,9 +25,9 @@ class ArtTest(unittest.TestCase):
 class RenderTest(unittest.TestCase):
     def test_pluto_faces_right_and_charon_faces_left(self):
         p = characters.render("pluto", "happy", "hi").split("\n")[1]
-        self.assertLess(p.index("^  ^"), p.index("| hi"))
+        self.assertLess(p.index("^ ^"), p.index("| hi"))
         c = characters.render("charon", "happy", "hi").split("\n")[1]
-        self.assertLess(c.index("| hi"), c.index("^  ^"))
+        self.assertLess(c.index("| hi"), c.index("^ ^"))
 
     def test_name_label_under_art(self):
         self.assertIn("Charon", characters.render("charon", "neutral", "hi"))
