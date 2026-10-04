@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from orbit import daemon, doctor, update
-from tests.helpers import make_runtime, run_cli
+from tests.helpers import make_cfg, make_runtime, run_cli
 
 
 class UpdateTest(unittest.TestCase):
@@ -117,6 +117,51 @@ class UpdateTest(unittest.TestCase):
         self.assertIn("pull --rebase", err)
         self.assertEqual(self.head(), before)
         self.assertEqual(self.restarts(), [])
+
+    def test_untracked_files_do_not_block(self):
+        self.commit(self.upstream, {"capabilities/notes/main.py": "v2\n"}, "notes: v2", push=True)
+        (self.clone / "scratch.txt").write_text("mine\n", encoding="utf-8")
+        code, out, err = self.update()
+        self.assertEqual(code, 0, err)
+        self.assertTrue((self.clone / "scratch.txt").exists())
+
+    def test_git_runs_in_english(self):
+        with mock.patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0, "", "")) as run:
+            update.git(self.clone, "status")
+        self.assertEqual(run.call_args.kwargs["env"]["LC_ALL"], "C")
+
+    def test_restart_timeout_is_reported_not_raised(self):
+        with mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired("systemctl", 30)):
+            self.assertIn("didn't finish within 30 s", update.restart_daemon(None))
+
+    def test_failing_doctor_fails_the_update(self):
+        self.commit(self.upstream, {"capabilities/notes/main.py": "v2\n"}, "notes: v2", push=True)
+        cfg = make_cfg(Path(self.tmp.name) / "data")
+        with mock.patch("orbit.config.load", return_value=cfg), \
+                mock.patch.object(update, "run_doctor", return_value=1):
+            code, out, _ = self.update_with_doctor()
+        self.assertEqual(code, 1)
+        self.assertIn("New code's in, but doctor found", out)
+
+    def update_with_doctor(self) -> tuple[int, str, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = update.main([], repo=self.clone)
+        return code, out.getvalue(), err.getvalue()
+
+    def test_core_changed_since(self):
+        start = self.head()
+        self.commit(self.clone, {"capabilities/notes/main.py": "v2\n"}, "notes")
+        self.assertFalse(update.core_changed_since(self.clone, start))
+        self.commit(self.clone, {"orbit/core.py": "v2\n"}, "core")
+        self.assertTrue(update.core_changed_since(self.clone, start))
+        self.assertIsNone(update.core_changed_since(self.clone, "0" * 40))
+
+    def test_speaker_without_config_follows_the_hostname(self):
+        with mock.patch("socket.gethostname", return_value="pluto.tail1234.ts.net"):
+            self.assertEqual(update.guess_me(), "pluto")
+        with mock.patch("socket.gethostname", return_value="laptop"):
+            self.assertEqual(update.guess_me(), "charon")
 
     def test_no_systemd_prints_the_command(self):
         with mock.patch("shutil.which", return_value=None):

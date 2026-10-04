@@ -7,8 +7,10 @@ branch is refused with a hint, and nothing is changed.
 """
 from __future__ import annotations
 
+import functools
 import os
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -32,7 +34,9 @@ class UpdateError(Exception):
 def git(repo: Path, *args: str) -> str:
     """Run git in `repo` and return stdout; raise UpdateError carrying git's own message on failure."""
     try:
-        p = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=120)
+        # LC_ALL=C: pull() matches git's English messages, which a translated git wouldn't print
+        p = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=120,
+                           env={**os.environ, "LC_ALL": "C"})
     except FileNotFoundError:
         raise UpdateError("git is not installed — install it (`sudo apt install git`) and try again") from None
     except subprocess.TimeoutExpired:
@@ -44,11 +48,18 @@ def git(repo: Path, *args: str) -> str:
 
 
 def current_commit(repo: Path = config.REPO_ROOT) -> str | None:
-    """Short HEAD commit, or None if `repo` isn't a git checkout. orbitd reports it in /health."""
+    """Short HEAD commit on disk, or None if `repo` isn't a git checkout."""
     try:
         return git(repo, "rev-parse", "--short", "HEAD") or None
     except UpdateError:
         return None
+
+
+@functools.cache
+def running_commit() -> str | None:
+    """The commit this process started on. orbitd reports it in /health; it stays put after a
+    `git pull`, which is how doctor spots an orbitd still running old core."""
+    return current_commit()
 
 
 def is_ancestor(repo: Path, old: str, new: str) -> bool | None:
@@ -63,7 +74,8 @@ def is_ancestor(repo: Path, old: str, new: str) -> bool | None:
 
 def pull(repo: Path) -> tuple[str, str]:
     """Fast-forward `repo` from its upstream. Returns (old commit, new commit)."""
-    if git(repo, "status", "--porcelain"):
+    # Untracked files don't count: a fast-forward leaves them alone (git refuses by itself if one is in the way).
+    if git(repo, "status", "--porcelain", "--untracked-files=no"):
         raise UpdateError(f"you have local changes in {repo} — commit or stash them first "
                           f"(`git -C {repo} status` lists them)")
     old = git(repo, "rev-parse", "HEAD")
@@ -87,13 +99,34 @@ def needs_reinstall(changed: list[str]) -> bool:
     return any(path in REINSTALL_PATHS for path in changed)
 
 
+def core_changed_since(repo: Path, commit: str) -> bool | None:
+    """Has anything orbitd runs changed between `commit` and the checkout? None if git can't tell.
+
+    doctor uses this to spot an orbitd still running old core after a hand-run `git pull`.
+    """
+    try:
+        return needs_restart(git(repo, "diff", "--name-only", commit, "HEAD").splitlines())
+    except UpdateError:
+        return None
+
+
+def guess_me() -> str:
+    """Who speaks when there's no config yet: the hostname if it's pluto or charon, else charon."""
+    host = socket.gethostname().split(".")[0].lower()
+    return host if host in config.CHARACTERS else "charon"
+
+
 def restart_daemon(cfg: Config | None) -> str:
     """Restart orbitd under systemd, or say how to when that isn't possible."""
     if cfg is not None and cfg.dev_allow_ips:
         return "dev mode: restart your `orbit daemon` by hand (systemd runs the real one, not this test setup)"
     if shutil.which("systemctl") is None:
         return f"systemd isn't available here — restart orbitd yourself: `{' '.join(RESTART_CMD)}`"
-    p = subprocess.run(RESTART_CMD, capture_output=True, text=True, timeout=30)
+    try:
+        p = subprocess.run(RESTART_CMD, capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        return (f"`{' '.join(RESTART_CMD)}` didn't finish within 30 s — check `systemctl --user status orbitd` "
+                f"and {config.data_dir()}/logs/orbitd.log")
     if p.returncode != 0:
         return (f"couldn't restart orbitd ({p.stderr.strip() or f'exit {p.returncode}'}) — run "
                 f"`{' '.join(RESTART_CMD)}` and check `systemctl --user status orbitd`")
@@ -112,10 +145,17 @@ def wait_for_daemon(cfg: Config, timeout: float = 10.0) -> None:
         time.sleep(0.25)
 
 
-def run_doctor(repo: Path) -> None:
-    """Run the *new* code's doctor in a fresh process: this one still has the old modules loaded."""
-    subprocess.run([sys.executable, "-m", "orbit.cli", "doctor"], cwd=repo, timeout=60,
-                   env={**os.environ, "PYTHONPATH": str(repo)})
+def run_doctor(repo: Path) -> int:
+    """Run the *new* code's doctor in a fresh process (this one still has the old modules loaded).
+
+    Returns its exit code, so a broken update makes `orbit update` fail too.
+    """
+    try:
+        return subprocess.run([sys.executable, "-m", "orbit.cli", "doctor"], cwd=repo, timeout=60,
+                              env={**os.environ, "PYTHONPATH": str(repo)}).returncode
+    except subprocess.TimeoutExpired:
+        print("✗ `orbit doctor` didn't finish within 60 s — run it again by hand to see what's stuck")
+        return 1
 
 
 def say(who: str, mood: str, text: str) -> None:
@@ -131,7 +171,7 @@ def main(args: list[str], repo: Path = config.REPO_ROOT, doctor: bool = True) ->
         cfg: Config | None = config.load()
     except ConfigError:
         cfg = None  # a broken or missing config shouldn't stop you pulling the fix for it
-    who = cfg.me if cfg else "charon"
+    who = cfg.me if cfg else guess_me()
     try:
         old, new = pull(repo)
         if old == new:
@@ -156,6 +196,7 @@ def main(args: list[str], repo: Path = config.REPO_ROOT, doctor: bool = True) ->
         print(f"the shell snippet or installer changed — run `{repo}/install.sh` again "
               "(it's safe to re-run; it replaces the bashrc block)")
 
+    code = 0
     if cfg is None:
         print("\nno config yet, so skipping `orbit doctor` — run `orbit init` first")
     elif doctor:
@@ -163,6 +204,9 @@ def main(args: list[str], repo: Path = config.REPO_ROOT, doctor: bool = True) ->
             wait_for_daemon(cfg)
         print()
         sys.stdout.flush()  # the doctor subprocess writes straight to the same terminal
-        run_doctor(repo)
-    say(who, "love", "Fresh code, same orbit ♥" if who == "charon" else "New code, same us ♥")
-    return 0
+        code = run_doctor(repo)
+    if code:
+        say(who, "worried", "New code's in, but doctor found something. Have a look above?")
+    else:
+        say(who, "love", "Fresh code, same orbit ♥" if who == "charon" else "New code, same us ♥")
+    return code
