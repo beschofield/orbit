@@ -2,7 +2,8 @@
 """notes — leave little notes for each other.
 
 `orbit note <text>` emits notes.sent; the other machine shows it at its next login.
-At login, unread notes are said by the sender's character, then marked notes.seen.
+At login, unread notes are said by the sender's character, with a "✉ Note from …" header
+and the time it was sent, then marked notes.seen.
 The sender then gets a read receipt at their next login (marked notes.receipts_shown).
 Unread and seen are worked out from input["events"] every time; there are no local files.
 Contract: docs/capability-contract.md
@@ -53,6 +54,40 @@ def _local(ts: str) -> str:
         return ts
 
 
+def _when(ts: str, now: str) -> str:
+    """"1:05 pm" for today, "Oct 2, 1:05 pm" otherwise, in local time."""
+    try:
+        t = dt.datetime.fromisoformat(ts).astimezone()
+        today = dt.datetime.fromisoformat(now).astimezone().date()
+    except ValueError:
+        return ts
+    clock = f"{t.hour % 12 or 12}:{t.minute:02d} {'am' if t.hour < 12 else 'pm'}"
+    return clock if t.date() == today else f"{t:%b} {t.day}, {clock}"
+
+
+def incoming(e: dict, inp: dict) -> str:
+    """A note as shown at login: a header saying who it's from and when, then the note."""
+    header = f"✉ Note from {NAMES.get(e['origin'], e['origin'])} · {_when(e['ts'], inp['now'])}"
+    body = _text(e)
+    room = MAX_NOTE - len(header) - 1
+    if len(body) > room:
+        body = body[: room - 1] + "…"
+    return f"{header}\n{body}"
+
+
+def receipt_text(peer: str, seqs: list[int], inp: dict) -> str:
+    if len(seqs) > 1:
+        return f"{NAMES[peer]} read your {len(seqs)} notes ♥"
+    mine = next((e for e in inp["events"] if e["origin"] == inp["me"]["name"]
+                 and e["type"] == "notes.sent" and e["seq"] == seqs[0]), None)
+    if mine is None:
+        return f"{NAMES[peer]} read your note ♥"
+    quote = _text(mine)
+    if len(quote) > 40:
+        quote = quote[:39] + "…"
+    return f'{NAMES[peer]} read your note "{quote}" ♥'
+
+
 def send(inp: dict, args: list[str]) -> dict:
     text = " ".join(args).strip()
     if not text:
@@ -78,7 +113,7 @@ def login(inp: dict) -> dict:
     emit: list[dict] = []
     notes = unread(inp)
     for e in notes[:MAX_SHOWN]:
-        say.append({"who": peer, "mood": "love", "text": _text(e)})
+        say.append({"who": peer, "mood": "love", "text": incoming(e, inp)})
     if len(notes) > MAX_SHOWN:
         say.append({"who": peer, "mood": "happy",
                     "text": f"…and {len(notes) - MAX_SHOWN} more. See them all with: orbit notes"})
@@ -86,8 +121,7 @@ def login(inp: dict) -> dict:
         emit.append({"type": "notes.seen", "data": {"seqs": [e["seq"] for e in notes]}})
     receipts = new_receipts(inp)
     if receipts:
-        what = "your note" if len(receipts) == 1 else f"your {len(receipts)} notes"
-        say.append({"who": me, "mood": "happy", "text": f"{NAMES[peer]} read {what} ♥"})
+        say.append({"who": me, "mood": "happy", "text": receipt_text(peer, receipts, inp)})
         emit.append({"type": "notes.receipts_shown", "data": {"seqs": receipts}})
     return {"say": say, "emit": emit, "prompt": ""}
 

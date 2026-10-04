@@ -1,5 +1,5 @@
 {
-  "description": "unread notes from Pluto are said by Pluto, then marked seen",
+  "description": "unread notes from Pluto are said by Pluto with a from/when header, then marked seen",
   "input": {
     "trigger": {"kind": "login"},
     "events": [
@@ -9,7 +9,7 @@
     ]
   },
   "expect": {
-    "say": [{"who": "pluto", "mood": "love", "text": "good luck today!"}],
+    "say": [{"who": "pluto", "mood": "love", "text": "✉ Note from Pluto · 1:00 pm\ngood luck today!"}],
     "emit": [{"type": "notes.seen", "data": {"seqs": [3]}, "v": 1}],
     "prompt": ""
   }

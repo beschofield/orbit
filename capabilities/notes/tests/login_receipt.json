@@ -8,7 +8,7 @@
     ]
   },
   "expect": {
-    "say": [{"who": "charon", "mood": "happy", "text": "Pluto read your note ♥"}],
+    "say": [{"who": "charon", "mood": "happy", "text": "Pluto read your note \"lunch at 1?\" ♥"}],
     "emit": [{"type": "notes.receipts_shown", "data": {"seqs": [5]}, "v": 1}],
     "prompt": ""
   }

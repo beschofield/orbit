@@ -30,5 +30,5 @@ class NotesRoundTripTest(unittest.TestCase):
         self.assertIn("lunch at 1?", out)
         self.assertNotIn("✉", self.pluto.prompt())
 
-        self.assertTrue(wait_for(lambda: "Pluto read your note ♥" in self.charon.cli("greet")[1], timeout=8))
+        self.assertTrue(wait_for(lambda: 'Pluto read your note "lunch at 1?"' in self.charon.cli("greet")[1], timeout=8))
         self.assertNotIn("read your note", self.charon.cli("greet")[1])

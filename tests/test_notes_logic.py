@@ -1,5 +1,8 @@
 import importlib.util
+import os
+import time
 import unittest
+from unittest import mock
 
 from tests.helpers import REPO
 
@@ -33,6 +36,18 @@ class NotesLogicTest(unittest.TestCase):
         self.assertIn("and 3 more", out["say"][-1]["text"])
         self.assertEqual(out["emit"][0]["data"]["seqs"], list(range(1, 9)))
 
+    def test_old_notes_show_the_date_and_receipts_quote_the_note(self):
+        old = {**sent(1, "from yesterday"), "ts": "2026-10-02T21:30:00Z"}
+        mine = sent(5, "a very long note that keeps going and going and going", origin="charon")
+        seen = {"origin": "pluto", "seq": 9, "type": "notes.seen", "ts": "2026-10-03T13:00:00Z", "v": 1,
+                "data": {"seqs": [5]}}
+        with mock.patch.dict(os.environ, {"TZ": "UTC"}):
+            time.tzset()
+            out = notes.handle({**BASE, "events": [old, mine, seen], "trigger": {"kind": "login"}})
+        time.tzset()
+        self.assertEqual(out["say"][0]["text"], "✉ Note from Pluto · Oct 2, 9:30 pm\nfrom yesterday")
+        self.assertEqual(out["say"][1]["text"], 'Pluto read your note "a very long note that keeps going and g…" ♥')
+
     def test_unread_ignores_my_own_notes(self):
         inp = {**BASE, "events": [sent(1, "mine", origin="charon")]}
         self.assertEqual(notes.unread(inp), [])
@@ -40,4 +55,4 @@ class NotesLogicTest(unittest.TestCase):
     def test_malformed_peer_note_does_not_crash(self):
         bad = {**sent(1, "x"), "data": {"text": 42}}
         out = notes.handle({**BASE, "events": [bad], "trigger": {"kind": "login"}})
-        self.assertEqual(out["say"][0]["text"], "(empty note)")
+        self.assertTrue(out["say"][0]["text"].endswith("\n(empty note)"))
