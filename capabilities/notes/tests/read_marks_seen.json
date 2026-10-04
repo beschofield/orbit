@@ -11,6 +11,6 @@
   "expect": {
     "say": [{"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:00 pm\nfirst"}],
     "emit": [{"type": "notes.seen", "data": {"seqs": [3]}, "v": 1}],
-    "prompt": "✉ 1"
+    "prompt": "✉  1"
   }
 }

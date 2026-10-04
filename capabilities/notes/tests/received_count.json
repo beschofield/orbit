@@ -7,5 +7,5 @@
       {"origin": "pluto", "seq": 2, "type": "notes.sent", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"text": "b"}}
     ]
   },
-  "expect": {"prompt": "✉ 2", "say": [], "emit": []}
+  "expect": {"prompt": "✉  2", "say": [], "emit": []}
 }
