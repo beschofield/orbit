@@ -33,7 +33,7 @@ to add a feature.
 | `orbit/config.py` | `~/.orbit/config.json` (`$ORBIT_DIR` overrides the folder) |
 | `orbit/log.py` | append-only logs in `~/.orbit/logs/` |
 | `capabilities/` | one folder per capability: example, notes, presence, companions |
-| `shell/orbit.bash` | the `~/.bashrc` block; `install.sh` installs it |
+| `shell/orbit.bash`, `shell/orbit.zsh` | the `~/.bashrc` and `~/.zshrc` blocks; `install.sh` installs them |
 | `tests/` | `unittest` suites; `tests/fixtures/capabilities/ping` is a test-only capability |
 
 ## Invariants (don't break these)

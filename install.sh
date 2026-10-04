@@ -7,11 +7,16 @@ DATA="${ORBIT_DIR:-$HOME/.orbit}"
 python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null || {
   echo "Orbit needs Python 3.11 or newer (found: $(python3 --version 2>&1))" >&2; exit 1; }
 command -v tailscale >/dev/null || { echo "Orbit needs Tailscale, but 'tailscale' isn't on PATH" >&2; exit 1; }
-if grep -q '^# >>> orbit >>>$' "$HOME/.bashrc" 2>/dev/null && ! grep -q '^# <<< orbit <<<$' "$HOME/.bashrc"; then
-  echo "~/.bashrc has '# >>> orbit >>>' but no '# <<< orbit <<<' line, so Orbit won't guess what to remove." >&2
-  echo "Fix ~/.bashrc by hand (delete the old orbit block, or add the end marker), then run install.sh again." >&2
-  exit 1
-fi
+# zsh gets its block too when it's in use: the login shell, or a ~/.zshrc already exists.
+RCS=(.bashrc)
+[[ -f $HOME/.zshrc || ${SHELL:-} == */zsh ]] && RCS+=(.zshrc)
+for rc in "${RCS[@]}"; do
+  if grep -q '^# >>> orbit >>>$' "$HOME/$rc" 2>/dev/null && ! grep -q '^# <<< orbit <<<$' "$HOME/$rc"; then
+    echo "~/$rc has '# >>> orbit >>>' but no '# <<< orbit <<<' line, so Orbit won't guess what to remove." >&2
+    echo "Fix ~/$rc by hand (delete the old orbit block, or add the end marker), then run install.sh again." >&2
+    exit 1
+  fi
+done
 
 if [[ ! -f $DATA/config.json ]]; then
   read -rp "Which machine is this? (pluto/charon): " ME
@@ -34,12 +39,14 @@ else
   echo "warning: couldn't start orbitd with systemd; run 'orbit daemon' by hand to see why" >&2
 fi
 
-touch "$HOME/.bashrc"
-if grep -q '^# >>> orbit >>>$' "$HOME/.bashrc"; then
-  # --follow-symlinks: edit a dotfiles-managed ~/.bashrc in place instead of replacing the link
-  sed -i --follow-symlinks '/^# >>> orbit >>>$/,/^# <<< orbit <<<$/d' "$HOME/.bashrc"
-fi
-cat "$REPO/shell/orbit.bash" >> "$HOME/.bashrc"
+for rc in "${RCS[@]}"; do
+  touch "$HOME/$rc"
+  if grep -q '^# >>> orbit >>>$' "$HOME/$rc"; then
+    # --follow-symlinks: edit a dotfiles-managed rc file in place instead of replacing the link
+    sed -i --follow-symlinks '/^# >>> orbit >>>$/,/^# <<< orbit <<<$/d' "$HOME/$rc"
+  fi
+  cat "$REPO/shell/orbit${rc%rc}" >> "$HOME/$rc"  # .bashrc gets orbit.bash, .zshrc gets orbit.zsh
+done
 
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;

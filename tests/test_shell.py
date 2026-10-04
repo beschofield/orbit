@@ -1,5 +1,6 @@
 import os
 import pty
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -8,6 +9,7 @@ from pathlib import Path
 from tests.helpers import REPO
 
 SNIPPET = (REPO / "shell" / "orbit.bash").read_text(encoding="utf-8") if (REPO / "shell" / "orbit.bash").exists() else ""
+ZSH_SNIPPET = (REPO / "shell" / "orbit.zsh").read_text(encoding="utf-8")
 
 
 def fake(bin_dir: Path, name: str, body: str) -> None:
@@ -31,14 +33,16 @@ class ShellSnippetTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    SHELL = ["bash", "-i", "-c"]
+
     def bash(self, script: str, path: str | None = None, tty: bool = False) -> subprocess.CompletedProcess:
-        """Run an interactive bash. tty=True gives it a terminal on stdout, as a real login has."""
+        """Run an interactive shell. tty=True gives it a terminal on stdout, as a real login has."""
         env = {"HOME": str(self.home), "PATH": path or f"{self.bin}:/usr/bin:/bin", "TERM": "dumb"}
         if not tty:
-            return subprocess.run(["bash", "-i", "-c", script], env=env, capture_output=True, text=True, timeout=10)
+            return subprocess.run([*self.SHELL, script], env=env, capture_output=True, text=True, timeout=10)
         master, slave = pty.openpty()
         try:
-            r = subprocess.run(["bash", "-i", "-c", script], env=env, stdin=subprocess.DEVNULL, stdout=slave,
+            r = subprocess.run([*self.SHELL, script], env=env, stdin=subprocess.DEVNULL, stdout=slave,
                                stderr=subprocess.PIPE, text=True, timeout=10)
         finally:
             os.close(slave)
@@ -93,6 +97,39 @@ class ShellSnippetTest(unittest.TestCase):
         self.assertFalse(self.calls.exists())
 
 
+@unittest.skipUnless(shutil.which("zsh"), "zsh isn't installed")
+class ZshSnippetTest(ShellSnippetTest):
+    """The same behaviour from ~/.zshrc. Inherits the bash cases; only the hook wiring differs."""
+
+    SHELL = ["zsh", "-d", "-i", "-c"]  # -d: skip /etc/zsh/zshrc, so the machine's own setup can't interfere
+
+    def setUp(self):
+        super().setUp()
+        (self.home / ".bashrc").unlink()
+        (self.home / ".zshrc").write_text("alias ll='ls -l'\n" + ZSH_SNIPPET)
+
+    def test_sourcing_twice_adds_hooks_once(self):
+        r = self.bash('source ~/.zshrc; __orbit_prompt; source ~/.zshrc; __orbit_prompt; '
+                      'print -r -- "$PROMPT"; print -r -- "${precmd_functions[*]}"')
+        self.assertEqual(r.stdout.count("${ORBIT_PS:+"), 1, r.stdout)
+        self.assertEqual(r.stdout.count("__orbit_prompt"), 1, r.stdout)
+
+    def test_prompt_shows_the_segment_before_the_theme_prompt(self):
+        (self.home / ".orbit" / "prompt").write_text("☾ charon: ✨", encoding="utf-8")
+        r = self.bash('PROMPT="theme> "; __orbit_prompt; print -rn -- "[${(%%)${(e)PROMPT}}]"')
+        self.assertIn("[☾ charon: ✨ theme> ]", r.stdout)
+
+    def test_a_theme_set_after_the_block_still_gets_the_segment(self):  # starship's init runs after or before
+        (self.home / ".orbit" / "prompt").write_text("x", encoding="utf-8")
+        r = self.bash('__orbit_prompt; PROMPT="starship> "; __orbit_prompt; print -rn -- "[${(%%)${(e)PROMPT}}]"')
+        self.assertIn("[x starship> ]", r.stdout)
+
+    def test_percent_in_the_segment_is_shown_literally(self):
+        (self.home / ".orbit" / "prompt").write_text("♇ pluto: ⏳ (100% done)", encoding="utf-8")
+        r = self.bash('PROMPT="> "; __orbit_prompt; print -rn -- "[${(%%)${(e)PROMPT}}]"')
+        self.assertIn("[♇ pluto: ⏳ (100% done) > ]", r.stdout)
+
+
 class InstallTest(unittest.TestCase):
     """Runs install.sh against a temporary HOME with fake tailscale and systemctl."""
 
@@ -112,7 +149,7 @@ class InstallTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def install(self) -> subprocess.CompletedProcess:
-        env = {"HOME": str(self.home), "PATH": f"{self.bin}:/usr/bin:/bin", "USER": "becca"}
+        env = {"HOME": str(self.home), "PATH": f"{self.bin}:/usr/bin:/bin", "USER": "becca", "SHELL": "/bin/bash"}
         return subprocess.run(["bash", str(REPO / "install.sh")], env=env, capture_output=True,
                               text=True, timeout=30, stdin=subprocess.DEVNULL)
 
@@ -148,3 +185,23 @@ class InstallTest(unittest.TestCase):
         self.assertTrue((home / ".config" / "systemd" / "user" / "orbitd.service").is_file())
         self.assertIn("--user enable --now orbitd.service", log.read_text())
         self.assertIn("loginctl enable-linger", r.stdout)
+        self.assertFalse((home / ".zshrc").exists())  # bash-only machine: no zsh file appears
+
+    def test_zsh_users_get_the_zsh_block_too(self):
+        (self.home / ".zshrc").write_text("alias ll='ls -l'\n")
+        for _ in range(2):
+            r = self.install()
+            self.assertEqual(r.returncode, 0, r.stderr)
+        zshrc = (self.home / ".zshrc").read_text()
+        self.assertEqual(zshrc.count("# >>> orbit >>>"), 1)
+        self.assertIn("add-zsh-hook precmd __orbit_prompt", zshrc)
+        self.assertIn("alias ll='ls -l'", zshrc)
+        self.assertIn("PROMPT_COMMAND", (self.home / ".bashrc").read_text())  # bash keeps its own block
+
+    def test_half_a_block_in_zshrc_is_left_alone_with_an_error(self):
+        broken = "# >>> orbit >>>\nimportant stuff\n"
+        (self.home / ".zshrc").write_text(broken)
+        r = self.install()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("~/.zshrc", r.stderr)
+        self.assertEqual((self.home / ".zshrc").read_text(), broken)

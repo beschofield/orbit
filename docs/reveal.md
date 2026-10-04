@@ -14,12 +14,12 @@ Do these steps on pluto, with Becca nearby for the testing part.
 
 - pluto and charon both online and on the tailnet
 - Python 3.11 or newer
-- bash as your shell (Orbit doesn't support zsh yet)
+- bash or zsh as your shell
 
 Check the last two:
 ```bash
 python3 --version   # 3.11 or newer
-echo $SHELL         # should end in /bash
+echo $SHELL         # should end in /bash or /zsh
 ```
 
 ## 1. Get the code
@@ -41,7 +41,8 @@ The installer:
 - writes `~/.orbit/config.json` for pluto
 - links `orbit` into `~/.local/bin`
 - starts the `orbitd` background service with systemd
-- adds a small block to `~/.bashrc`, between `# >>> orbit >>>` and `# <<< orbit <<<`
+- adds a small block to `~/.bashrc` (and to `~/.zshrc` if you use zsh), between
+  `# >>> orbit >>>` and `# <<< orbit <<<`
 
 It's safe to run again. Each run replaces what the last one did.
 
@@ -79,7 +80,7 @@ Every line should start with ✓, and each ✗ line says what to fix. If it says
 ## 5. Open a new terminal
 
 Log out and back in, or open a fresh login shell, so `~/.local/bin` is on your PATH
-and the new `~/.bashrc` block loads. Pluto should greet you, then hand over Becca's note
+and the new `~/.bashrc` or `~/.zshrc` block loads. Pluto should greet you, then hand over Becca's note
 in Charon's bubble, something like:
 
 ```
