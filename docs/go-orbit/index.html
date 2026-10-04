@@ -1,0 +1,307 @@
+<title>Orbit for Pluto & Charon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one centered reading column under a small orbit diagram; tabs switch between four sections. */
+:root {
+  --bg: #f6f4fb;          /* pale dawn, faint violet */
+  --surface: #ffffff;
+  --ink: #23202f;
+  --muted: #625d73;
+  --line: #ddd8ea;
+  --pluto: #c8784f;       /* Pluto's peach-tan surface */
+  --charon: #5d7690;      /* Charon's blue-grey */
+  --cap: #9b3b33;         /* Charon's dark red polar cap */
+  --code-bg: #efecf6;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15131f; --surface: #1d1a2a; --ink: #ebe7f5; --muted: #a39cb8; --line: #332e45;
+    --pluto: #e3a17c; --charon: #8fa9c4; --cap: #d0675d; --code-bg: #24203a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15131f; --surface: #1d1a2a; --ink: #ebe7f5; --muted: #a39cb8; --line: #332e45;
+  --pluto: #e3a17c; --charon: #8fa9c4; --cap: #d0675d; --code-bg: #24203a; color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 64px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 2.9rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--charon); }
+code, pre, kbd { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 4px; }
+.muted { color: var(--muted); }
+
+/* hero */
+header.hero { display: grid; grid-template-columns: 1fr 180px; gap: 24px; align-items: center; }
+.hero .text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+canvas#orbit { width: 180px; height: 180px; max-width: 100%; }
+.facts { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { header.hero { grid-template-columns: 1fr; } canvas#orbit { justify-self: center; } }
+
+/* tabs */
+nav.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 32px 28px; border-bottom: 1px solid var(--line); }
+nav.tabs button {
+  font: 600 0.95rem var(--font-display); color: var(--muted); background: none; border: 0;
+  padding: 10px 14px; border-bottom: 3px solid transparent; margin-bottom: -1px; cursor: pointer;
+}
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--pluto); }
+nav.tabs button:focus-visible, .copy:focus-visible { outline: 2px solid var(--charon); outline-offset: 2px; border-radius: 4px; }
+
+section.panel { display: flex; flex-direction: column; gap: 22px; }
+.block { display: flex; flex-direction: column; gap: 10px; }
+
+/* terminal sample */
+.term { background: #1b1828; color: #e9e5f5; border-radius: 10px; padding: 16px 18px; overflow-x: auto; }
+.term pre { margin: 0; font-size: 0.8rem; line-height: 1.35; white-space: pre; }
+.term .pl { color: #f0b08b; } .term .ch { color: #a7c0da; } .term .dim { color: #8c86a3; }
+
+/* commands */
+.cmds { display: grid; grid-template-columns: max-content 1fr; gap: 10px 18px; align-items: baseline; }
+.cmds dt { font-family: var(--font-mono); font-size: 0.88rem; white-space: nowrap; }
+.cmds dd { margin: 0; min-width: 0; }
+@media (max-width: 560px) { .cmds { grid-template-columns: 1fr; gap: 2px; } .cmds dd { margin-bottom: 10px; } }
+
+.prompt-legend { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { font-family: var(--font-mono); font-size: 0.85rem; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+
+/* copy box */
+.copybox { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--pluto); border-radius: 8px; padding: 14px 16px; }
+.copybox p { font-family: var(--font-mono); font-size: 0.9rem; flex: 1; min-width: 0; }
+.copy { font: 600 0.82rem var(--font-display); color: var(--ink); background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+
+ol.steps { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 10px; }
+ol.steps li { padding-left: 4px; max-width: 65ch; }
+pre.code { background: var(--code-bg); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 0; line-height: 1.45; }
+
+/* ideas */
+.ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.idea { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.idea .uses { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px; }
+.tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+
+.soon { border: 1px dashed var(--line); border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.soon ul { margin: 0; padding-left: 1.2em; color: var(--muted); }
+
+footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="text">
+      <span class="eyebrow">pluto ⇄ charon · port 1978</span>
+      <h1>Pluto and Charon now keep each other company.</h1>
+      <p>Your machine and Becca's each have a little terminal companion. They say hi when you open a terminal, pass notes between you, and show whether the other one is around.</p>
+      <p class="facts">Pluto and Charon are tidally locked: they always show each other the same face, and they circle a point in the space between them, about 19,600&nbsp;km apart, once every 6.39&nbsp;days. Charon was found in 1978, which is why Orbit listens on port 1978.</p>
+    </div>
+    <canvas id="orbit" width="360" height="360" role="img" aria-label="Pluto and Charon orbiting a shared point between them"></canvas>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tab-use" aria-controls="use" aria-selected="true">Using it</button>
+    <button role="tab" id="tab-add" aria-controls="add" aria-selected="false">Adding a capability</button>
+    <button role="tab" id="tab-ideas" aria-controls="ideas" aria-selected="false">Ideas</button>
+    <button role="tab" id="tab-docs" aria-controls="docs" aria-selected="false">Documentation</button>
+  </nav>
+
+  <!-- USING IT -->
+  <section class="panel" id="use" role="tabpanel" aria-labelledby="tab-use">
+    <div class="block">
+      <h2>Open a terminal</h2>
+      <p>That's it. Each new terminal starts with a greeting from your character. Any notes Becca left show up in Charon's bubble, and you'll hear when she's read yours.</p>
+    </div>
+    <div class="term" aria-label="Example greeting">
+<pre><span class="pl">   .-~~~~-.     </span>  .-----------------.
+<span class="pl">  /  ^  ^  \    </span> &lt;| Good morning! ☀ |
+<span class="pl"> |   \__/   |   </span>  '-----------------'
+<span class="pl">  \   ♥    /</span>
+<span class="pl">   '-....-'</span>
+<span class="pl">     Pluto</span>
+
+ .--------------------.  <span class="ch">    .^^^^.</span>
+ | good luck today! ♥ |&gt; <span class="ch">   / ♥  ♥ \</span>
+ '--------------------'  <span class="ch">  |  \__/  |</span>
+                         <span class="ch">   '.____.'</span>
+                         <span class="ch">     Charon</span>
+<span class="dim">☾ charon: active · ✉ 1  ~$</span></pre>
+    </div>
+
+    <div class="block">
+      <h2>Commands</h2>
+      <dl class="cmds">
+        <dt>orbit note "lunch at 1?"</dt><dd>Send Becca a note. It pops up on charon at her next terminal. Up to 280 characters, emoji welcome.</dd>
+        <dt>orbit notes</dt><dd>See the last 20 notes from both of you.</dd>
+        <dt>orbit away "at the gym"</dt><dd>Mark yourself away, with an optional short message. It sticks until you come back.</dd>
+        <dt>orbit back</dt><dd>Go back to automatic presence: active, idle or away, based on when you last typed.</dd>
+        <dt>orbit hi</dt><dd>Say hi to Pluto.</dd>
+        <dt>orbit greet</dt><dd>Show the login greeting again.</dd>
+        <dt>orbit help</dt><dd>List every command, including ones you add later.</dd>
+        <dt>orbit doctor</dt><dd>Check that everything works. It explains what's wrong and how to fix it.</dd>
+      </dl>
+    </div>
+
+    <div class="block">
+      <h2>Your prompt</h2>
+      <p>The start of your shell prompt shows how Becca is doing. It's read from a file, so it never slows your shell down.</p>
+      <div class="prompt-legend">
+        <span class="chip">☾ charon: active</span>
+        <span class="chip">☾ charon: away (lunch)</span>
+        <span class="chip">☾ charon: 💤</span>
+        <span class="chip">✉ 2</span>
+      </div>
+      <p class="muted">💤 means charon is switched off or unreachable. ✉ counts notes you haven't seen yet; open a new terminal to read them.</p>
+    </div>
+  </section>
+
+  <!-- ADDING -->
+  <section class="panel" id="add" role="tabpanel" aria-labelledby="tab-add" hidden>
+    <div class="block">
+      <h2>The easy way: ask Claude</h2>
+      <p>Orbit was built to grow, and every feature is a small <strong>capability</strong>. Open Claude Code in the repo on pluto and say something like:</p>
+      <div class="copybox">
+        <p id="claude-prompt">Read CLAUDE.md, then use the new-capability skill to add a capability that counts down to our next trip and mentions it at login.</p>
+        <button class="copy" type="button" data-copy="claude-prompt">Copy</button>
+      </div>
+      <p>Claude will copy the template, write test cases first, build it, and check it against a fake Charon running on your own machine. Charon's real data is never touched.</p>
+    </div>
+
+    <div class="block">
+      <h3>What a capability is</h3>
+      <p>A folder in <code>capabilities/</code> with a small program in it. Orbit runs the program when something happens and hands it everything it needs as JSON. It answers with what the characters should say, events to remember (which sync to the other machine), and text for your prompt.</p>
+      <pre class="code">capabilities/countdown/
+├── manifest.json   # its name, commands, and when it runs
+├── main.py         # the program
+├── README.md       # what it does
+└── tests/          # example inputs and the output they should produce</pre>
+      <p>It can run on a command (<code>orbit countdown add …</code>), at login, on a timer, or when an event arrives from Becca's machine.</p>
+    </div>
+
+    <div class="block">
+      <h3>By hand</h3>
+      <ol class="steps">
+        <li>Copy the template: <code>cp -r capabilities/example capabilities/countdown</code>.</li>
+        <li>Write a few test cases in <code>tests/</code>: an input and the output you expect.</li>
+        <li>Fill in <code>manifest.json</code>: commands, triggers and the event types it records.</li>
+        <li>Write <code>main.py</code>. It reads one JSON object and prints one JSON object.</li>
+        <li>Check it: <code>bin/orbit dev test countdown</code>, then try it with <code>bin/orbit dev run countdown login</code>.</li>
+        <li>Write its <code>README.md</code>.</li>
+      </ol>
+      <p class="muted">Every rule lives in <code>docs/capability-contract.md</code>.</p>
+    </div>
+
+    <div class="block">
+      <h3>Sharing it with Becca</h3>
+      <p>Code doesn't travel between the machines on its own; only notes and other events do. Commit and push your capability, and Becca runs <code>git pull</code> on charon. Orbit notices new capabilities within about 30 seconds, so nobody has to restart anything. <code>orbit doctor</code> tells you if one machine has something the other doesn't.</p>
+    </div>
+  </section>
+
+  <!-- IDEAS -->
+  <section class="panel" id="ideas" role="tabpanel" aria-labelledby="tab-ideas" hidden>
+    <div class="block">
+      <h2>Ideas for what's next</h2>
+      <p>Some ideas to start from. The tags say which parts of Orbit each one would use.</p>
+    </div>
+    <div class="ideas">
+      <article class="idea"><h3>Countdowns</h3><p>“12 days until the trip.” Add dates with a command and get a reminder at login.</p><div class="uses"><span class="tag">command</span><span class="tag">login</span></div></article>
+      <article class="idea"><h3>Shared grocery list</h3><p><code>orbit list add oat milk</code> on either machine, one list for both of you.</p><div class="uses"><span class="tag">command</span><span class="tag">synced events</span></div></article>
+      <article class="idea"><h3>Gratitude jar</h3><p>Drop in small thank-yous, and now and then a character pulls an old one back out at login.</p><div class="uses"><span class="tag">command</span><span class="tag">login</span></div></article>
+      <article class="idea"><h3>Hug button</h3><p><code>orbit hug</code> makes the other character blush at their next prompt.</p><div class="uses"><span class="tag">command</span><span class="tag">prompt</span><span class="tag">received</span></div></article>
+      <article class="idea"><h3>Question of the day</h3><p>One small question each morning. You both answer, and you see each other's answer once you've given yours.</p><div class="uses"><span class="tag">timer</span><span class="tag">login</span><span class="tag">synced events</span></div></article>
+      <article class="idea"><h3>Lamp glow</h3><p>A Home Assistant light warms up when a note arrives. The <code>homeassistant</code> box is already on the tailnet.</p><div class="uses"><span class="tag">received</span><span class="tag">network</span></div></article>
+      <article class="idea"><h3>Memory search</h3><p><code>orbit ask "what was that ramen place?"</code> searches your notes together.</p><div class="uses"><span class="tag">command</span></div></article>
+      <article class="idea"><h3><code>orbit update</code></h3><p>One command to pull the latest code and restart only if needed. It's already planned in <code>TODO.md</code>.</p><div class="uses"><span class="tag">core</span></div></article>
+    </div>
+    <p class="muted">The running list lives in <code>TODO.md</code>. Move an idea to “In progress” with your name when you pick it up.</p>
+  </section>
+
+  <!-- DOCS (placeholder) -->
+  <section class="panel" id="docs" role="tabpanel" aria-labelledby="tab-docs" hidden>
+    <div class="soon">
+      <h2>Documentation</h2>
+      <p>This page is coming soon. For now, everything lives in the repo:</p>
+      <ul>
+        <li><code>README.md</code>: the story and how to install</li>
+        <li><code>CLAUDE.md</code>: the map of the code and the rules, for Claude and for you</li>
+        <li><code>docs/capability-contract.md</code>: exactly what a capability receives and returns</li>
+        <li><code>orbit/art/README.md</code>: how to change the character art</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Made for Gabby by Becca, with Pluto and Charon.</footer>
+</div>
+
+<script>
+(function () {
+  // Tabs, with deep links like #ideas.
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  function show(id) {
+    tabs.forEach(t => {
+      const on = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(t => t.addEventListener('click', () => {
+    const id = t.getAttribute('aria-controls');
+    show(id);
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+  }));
+  const start = (location.hash || '').slice(1);
+  if (tabs.some(t => t.getAttribute('aria-controls') === start)) show(start);
+
+  // Copy buttons.
+  document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', () => {
+    const el = document.getElementById(btn.dataset.copy);
+    const done = () => { btn.textContent = 'Copied'; setTimeout(() => (btn.textContent = 'Copy'), 1500); };
+    const fallback = () => {
+      const r = document.createRange(); r.selectNodeContents(el);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'Selected — press Ctrl+C';
+    };
+    try { navigator.clipboard.writeText(el.textContent).then(done, fallback); } catch (e) { fallback(); }
+  }));
+
+  // Pluto and Charon around their barycenter (it sits outside Pluto).
+  const c = document.getElementById('orbit');
+  const ctx = c.getContext('2d');
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Mass ratio ≈ 8.2 : 1, so Pluto's orbit around the barycenter is ~1/8 of Charon's.
+  const R_CHARON = 120, R_PLUTO = 120 / 8.2 * 1.6; // Pluto's circle exaggerated a little so it reads
+  function draw(t) {
+    const w = c.width, h = c.height, cx = w / 2, cy = h / 2;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = css('--line'); ctx.lineWidth = 2; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.arc(cx, cy, R_CHARON, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R_PLUTO, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = css('--muted'); ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+    const a = t / 4000;
+    const px = cx - Math.cos(a) * R_PLUTO, py = cy - Math.sin(a) * R_PLUTO;
+    const qx = cx + Math.cos(a) * R_CHARON, qy = cy + Math.sin(a) * R_CHARON;
+    // Pluto, with its heart facing Charon (tidally locked).
+    ctx.fillStyle = css('--pluto'); ctx.beginPath(); ctx.arc(px, py, 34, 0, Math.PI * 2); ctx.fill();
+    ctx.save(); ctx.translate(px + Math.cos(a) * 14, py + Math.sin(a) * 14);
+    ctx.fillStyle = css('--surface'); ctx.font = '22px ' + css('--font-body');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('♥', 0, 1); ctx.restore();
+    // Charon, with its red cap.
+    ctx.fillStyle = css('--charon'); ctx.beginPath(); ctx.arc(qx, qy, 17, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = css('--cap'); ctx.beginPath(); ctx.arc(qx, qy, 17, Math.PI * 1.2, Math.PI * 1.8); ctx.closePath(); ctx.fill();
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  draw(reduce ? 2600 : performance.now());
+})();
+</script>
