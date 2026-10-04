@@ -6,7 +6,7 @@ presence.status (keep: latest) only when it changes. `orbit away [message]` sets
 manual state that sticks until `orbit back`.
 tick and received: rebuild the prompt from the peer's latest status. The text comes
 from the other machine, so control characters are stripped.
-`orbit status [on|off]` hides or shows the segment. The choice is a presence.display
+`orbit status toggle|on|off` hides or shows the segment. The choice is a presence.display
 event (keep: latest), because capabilities keep no state of their own. Hiding only
 affects my prompt: my own status keeps going to the peer.
 Contract: docs/capability-contract.md
@@ -86,15 +86,19 @@ def prompt_segment(inp: dict) -> str:
 
 
 def status_command(inp: dict, args: list[str]) -> dict:
-    """`orbit status` toggles; `orbit status on|off` sets it either way."""
+    """`orbit status toggle` flips it; `orbit status on|off` sets it either way.
+
+    Bare `orbit status` only prints usage: it reads like "show me the status", so
+    silently hiding the segment would surprise people.
+    """
     choice = " ".join(args).strip().lower()
-    if choice not in ("", "on", "off"):
-        return {"print": "usage: orbit status [on|off]"}
-    show = not shown(inp) if choice == "" else choice == "on"
+    if choice not in ("toggle", "on", "off"):
+        return {"print": "usage: orbit status toggle|on|off"}
+    show = not shown(inp) if choice == "toggle" else choice == "on"
     return {"emit": [{"type": "presence.display", "data": {"shown": show}}],
             "prompt": prompt_text(inp) if show else "",
             "print": "Status is back in your prompt." if show
-                     else "Status hidden from your prompt. Run `orbit status` to show it again."}
+                     else "Status hidden from your prompt. Run `orbit status on` to show it again."}
 
 
 def status_event(state: str, manual: bool, message: str | None = None) -> dict:

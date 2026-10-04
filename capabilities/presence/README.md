@@ -7,7 +7,7 @@ or `☾ charon: idle` on pluto. When the other machine can't be reached, it show
   - `orbit away [message]` marks you away, with an optional message of up to 30
     characters. It sticks until you run `orbit back`.
   - `orbit back` returns you to automatic presence.
-  - `orbit status` hides your girlfriend's status from your prompt, or shows it
+  - `orbit status toggle` hides your girlfriend's status from your prompt, or shows it
     again if it's hidden. `orbit status on` and `orbit status off` set it either
     way. It only changes your own prompt: she still sees yours.
 - **Every 60 s (tick):** works out your state from terminal idle time (how long since

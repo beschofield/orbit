@@ -1,7 +1,7 @@
 {
-  "description": "orbit status with no argument shows a hidden status again",
+  "description": "orbit status toggle shows a hidden status again",
   "input": {
-    "trigger": {"kind": "command", "name": "status", "args": []},
+    "trigger": {"kind": "command", "name": "status", "args": ["toggle"]},
     "latest": {"charon": {"presence.display": {"origin": "charon", "seq": 9, "type": "presence.display", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"shown": false}}}, "pluto": {}}
   },
   "expect": {
