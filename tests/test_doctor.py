@@ -80,6 +80,24 @@ class DoctorTest(unittest.TestCase):
         finally:
             charon.stop()
 
+    def test_peer_name_resolving_off_the_tailnet_is_flagged(self):
+        data = self.root / "lan"
+        config.write(data, {"me": "pluto", "peer": "charon", "port": 19783, "bind": "127.0.0.1",
+                            "peer_host": "charon.invalid",  # .invalid never resolves, so no real machine is asked
+                            "capabilities_dir": str(self.root / "caps")})
+        with mock.patch("orbit.tailnet.off_tailnet_addresses", return_value=["192.168.4.45"]), \
+                mock.patch("orbit.tailnet.magicdns_suffix", return_value="tail123.ts.net"):
+            out = run_cli(data, "doctor")[1]
+        self.assertIn("✗ charon.invalid resolves to 192.168.4.45, which isn't a tailnet address", out)
+        self.assertIn('"peer_host": "charon.tail123.ts.net"', out)
+
+    def test_dev_setups_skip_the_tailnet_address_check(self):
+        with mock.patch("orbit.tailnet.off_tailnet_addresses", return_value=["127.0.0.1"]) as check:
+            charon = Machine(self.root, "charon", "pluto", 19780, 19781, FIXTURE_CAPS)
+            out = charon.cli("doctor")[1]
+        self.assertNotIn("isn't a tailnet address", out)
+        check.assert_not_called()
+
     def test_capability_mismatch_between_machines(self):
         empty = self.root / "empty"
         empty.mkdir()

@@ -5,7 +5,9 @@ import sys
 from pathlib import Path
 from typing import Iterator
 
-from orbit import CORE_VERSION, config, daemon, loader, sync, update
+from urllib.parse import urlsplit
+
+from orbit import CORE_VERSION, config, daemon, loader, sync, tailnet, update
 
 
 def main(rt: loader.Runtime, args: list[str]) -> int:
@@ -60,6 +62,7 @@ def checks(rt: loader.Runtime) -> Iterator[tuple[bool, str]]:
             yield False, (f"orbitd is not answering on {host}:{cfg.port} — try `systemctl --user status orbitd` "
                           f"and {cfg.data_dir}/logs/orbitd.log")
 
+    yield from peer_address_check(cfg)
     theirs = sync.get_json(f"{cfg.peer_url}/health")
     if theirs is None:
         yield False, (f"{cfg.peer} is not answering at {cfg.peer_url} (fine if it's switched off; otherwise check "
@@ -86,6 +89,21 @@ def checks(rt: loader.Runtime) -> Iterator[tuple[bool, str]]:
         yield True, f"{cfg.peer} accepts requests from {cfg.me}"
     except sync.PeerError as e:
         yield False, f"{cfg.peer} refused to sync: {e}"
+
+
+def peer_address_check(cfg: config.Config) -> Iterator[tuple[bool, str]]:
+    """Flag a peer name that resolves off the tailnet: orbitd there refuses it, but only some of the time."""
+    if cfg.dev_allow_ips:
+        return  # dev/test setups talk over loopback on purpose
+    host = urlsplit(cfg.peer_url).hostname or ""
+    off = tailnet.off_tailnet_addresses(host)
+    if not off:
+        return
+    suffix = tailnet.magicdns_suffix()
+    fix = (f'set "peer_host": "{cfg.peer}.{suffix}"' if suffix
+           else f"set peer_host to {cfg.peer}'s MagicDNS name or tailnet IP (`tailscale ip -4 {cfg.peer}`)")
+    yield False, (f"{host} resolves to {', '.join(off)}, which isn't a tailnet address, so syncing can fail "
+                  f"on and off — {fix} in {cfg.data_dir}/config.json, then `systemctl --user restart orbitd`")
 
 
 def commit_mismatch(me: str, peer: str, mine: str | None, theirs: str | None,

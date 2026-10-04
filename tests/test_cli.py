@@ -161,6 +161,18 @@ class CliTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("already exists", err)
 
+    def test_init_uses_the_magicdns_name_for_the_peer(self):
+        fresh = self.root / "fresh"
+        with mock.patch("orbit.tailnet.magicdns_suffix", return_value="tail123.ts.net"):
+            run_cli(fresh, "init", "--me", "pluto", "--peer", "charon")
+        self.assertEqual(config.load(fresh).peer_url, "http://charon.tail123.ts.net:1978")
+
+    def test_init_without_magicdns_keeps_the_bare_name(self):
+        fresh = self.root / "fresh"
+        with mock.patch("orbit.tailnet.magicdns_suffix", return_value=None):
+            run_cli(fresh, "init", "--me", "pluto", "--peer", "charon")
+        self.assertEqual(config.load(fresh).peer_url, "http://charon:1978")
+
     def test_init_dev_points_at_the_dev_peer(self):
         fresh = self.root / "fresh"
         run_cli(fresh, "init", "--me", "charon", "--peer", "pluto", "--dev")
