@@ -25,7 +25,7 @@ to add a feature.
 | `orbit/store.py` | SQLite event log (`events`, `latest`, `meta`) |
 | `orbit/sync.py` | pulls the peer's events over HTTP; poke; backoff |
 | `orbit/daemon.py` | orbitd: HTTP API, `tailscale whois` auth, pull and tick loop |
-| `orbit/characters.py` | ASCII art (`orbit/art/<who>/<mood>.txt`) and speech bubbles |
+| `orbit/characters.py` | ASCII art (`orbit/art/<who>/<look>/<mood>.txt`; look is `forward` or `side`) and speech bubbles |
 | `orbit/prompt.py` | builds `~/.orbit/prompt` from each capability's segment |
 | `orbit/devtools.py` | `orbit dev run`, `orbit dev test`, `orbit dev peer` |
 | `orbit/doctor.py` | `orbit doctor` health checks |

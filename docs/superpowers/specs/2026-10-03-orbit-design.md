@@ -70,7 +70,7 @@ orbit/
 │   ├── contract.py               # validation of manifests and outputs
 │   ├── characters.py             # rendering: art + mood + speech bubble
 │   ├── config.py                 # load/validate ~/.orbit/config.json
-│   └── art/{pluto,charon}/<mood>.txt
+│   └── art/{pluto,charon}/{forward,side}/<mood>.txt
 ├── capabilities/
 │   ├── companions/
 │   ├── notes/
@@ -303,11 +303,13 @@ the whois check is replaced by a static allowlist.
 
 ## 8. Characters
 
-- Art lives in plain text files: `orbit/art/<who>/<mood>.txt`. Each is 6 lines
-  or fewer and 16 columns or narrower. Every mood listed in §5.4 exists for
-  both characters.
-- `characters.render(who, mood, text)` returns the art next to a word-wrapped
-  speech bubble, 60 columns wide in total.
+- Art lives in plain text files: `orbit/art/<who>/<look>/<mood>.txt`, where
+  look is `forward` (at the person at the terminal) or `side` (toward the
+  other planet). Each is 6 lines or fewer and 16 columns or narrower. Every
+  mood listed in §5.4 exists in both looks for both characters. Missing art
+  falls back <look>/<mood> → <look>/neutral → forward/<mood> → forward/neutral.
+- `characters.render(who, mood, text, look=...)` returns the art next to a
+  word-wrapped speech bubble, 60 columns wide in total.
 - If several `say` entries come from the same trigger, they're shown in
   order. If both characters speak, they're shown facing each other: Pluto's
   art on the left, Charon's on the right.
@@ -461,7 +463,7 @@ everything in under 30 s.
   or output can break; the examples in the contract doc pass validation.
 - **loader:** timeout, non-zero exit, invalid JSON, auto-disable and
   re-enable on mtime change, duplicate command names.
-- **characters:** saved reference output for every `who`×`mood`, plus
+- **characters:** saved reference output for every `who`×`look`×`mood`, plus
   wrapping of long text.
 - **sync (integration):** two daemons on loopback (ports 19780/19781, temp data
   dirs, allowlist auth):
