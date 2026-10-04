@@ -9,7 +9,7 @@
     ]
   },
   "expect": {
-    "say": [{"who": "pluto", "mood": "love", "text": "✉ Note from Pluto · 1:00 pm\ngood luck today!"}],
+    "say": [{"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:00 pm\ngood luck today!"}],
     "emit": [{"type": "notes.seen", "data": {"seqs": [3]}, "v": 1}],
     "prompt": ""
   }

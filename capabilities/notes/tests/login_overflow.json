@@ -1,0 +1,26 @@
+{
+  "description": "more than five unread notes: five are said, the rest summarized; all look to the side",
+  "input": {
+    "trigger": {"kind": "login"},
+    "events": [
+      {"origin": "pluto", "seq": 1, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "one"}},
+      {"origin": "pluto", "seq": 2, "type": "notes.sent", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"text": "two"}},
+      {"origin": "pluto", "seq": 3, "type": "notes.sent", "ts": "2026-10-03T13:02:00Z", "v": 1, "data": {"text": "three"}},
+      {"origin": "pluto", "seq": 4, "type": "notes.sent", "ts": "2026-10-03T13:03:00Z", "v": 1, "data": {"text": "four"}},
+      {"origin": "pluto", "seq": 5, "type": "notes.sent", "ts": "2026-10-03T13:04:00Z", "v": 1, "data": {"text": "five"}},
+      {"origin": "pluto", "seq": 6, "type": "notes.sent", "ts": "2026-10-03T13:05:00Z", "v": 1, "data": {"text": "six"}}
+    ]
+  },
+  "expect": {
+    "say": [
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:00 pm\none"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:01 pm\ntwo"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:02 pm\nthree"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:03 pm\nfour"},
+      {"who": "pluto", "mood": "love", "look": "side", "text": "✉ Note from Pluto · 1:04 pm\nfive"},
+      {"who": "pluto", "mood": "happy", "look": "side", "text": "…and 1 more. See them all with: orbit notes"}
+    ],
+    "emit": [{"type": "notes.seen", "data": {"seqs": [1, 2, 3, 4, 5, 6]}, "v": 1}],
+    "prompt": ""
+  }
+}
