@@ -56,7 +56,7 @@ the manifest's `name`.
 | `description` | One line. `orbit doctor` and `orbit help` show it. |
 | `contract` | Always `1`. |
 | `run` | A file name inside the folder. It must be executable (`chmod +x`) and start with a shebang such as `#!/usr/bin/env python3`. |
-| `commands` | The `orbit <name> ...` commands this capability answers. Each has a `name` (lowercase letters, digits and `-`), a `usage` and a `help`. Names must be unique across all capabilities; if two clash, neither gets the command until one is renamed. Reserved by the core: `daemon`, `dev`, `doctor`, `greet`, `help`, `init`. |
+| `commands` | The `orbit <name> ...` commands this capability answers. Each has a `name` (lowercase letters, digits and `-`), a `usage` and a `help`. Names must be unique across all capabilities; if two clash, neither gets the command until one is renamed. Reserved by the core: `daemon`, `dev`, `doctor`, `greet`, `help`, `init`, `update`. |
 | `triggers` | Any of `login`, `tick`, `received`. Commands are implied by `commands`, so don't list `command`. |
 | `tick_seconds` | Required (a whole number ≥ 10) when `triggers` includes `tick`; otherwise `null`. |
 | `event_types` | Every event type this capability may emit. Each must start with `<name>.` and maps to `{"keep": "log"}` (the full history is kept) or `{"keep": "latest"}` (only the newest per machine is kept). |

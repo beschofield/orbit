@@ -120,7 +120,7 @@ Do these with Becca at charon:
 - **Make it yours.** Open Claude Code in `~/orbit` and say
   *"Read CLAUDE.md, then use the new-capability skill to add …"*. `TODO.md` has a list
   of ideas and things to build next.
-- **Getting each other's changes:** run `git pull` in `~/orbit`. New capabilities show
-  up within about 30 seconds. If the core (`orbit/`) changed, also run
-  `systemctl --user restart orbitd`. `orbit doctor` tells you if your machine and
-  Becca's are out of sync.
+- **Getting each other's changes:** run `orbit update`. It pulls the latest code and
+  restarts orbitd only if the core changed; new capabilities show up within about 30
+  seconds. `orbit doctor` tells you if your machine and Becca's are out of sync, and
+  which one needs the update.
