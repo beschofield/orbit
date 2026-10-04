@@ -1,5 +1,5 @@
 {
-  "description": "orbit notes lists notes from both people (TZ=UTC in tests)",
+  "description": "orbit notes lists notes from both people, numbered for orbit read (TZ=UTC in tests)",
   "input": {
     "trigger": {"kind": "command", "name": "notes", "args": []},
     "events": [
@@ -7,5 +7,5 @@
       {"origin": "pluto", "seq": 2, "type": "notes.sent", "ts": "2026-10-03T13:01:00Z", "v": 1, "data": {"text": "hello"}}
     ]
   },
-  "expect": {"print": "2026-10-03 13:00  Charon: hi\n2026-10-03 13:01  Pluto: hello"}
+  "expect": {"print": "1  2026-10-03 13:00  Charon: hi\n2  2026-10-03 13:01  Pluto: hello"}
 }

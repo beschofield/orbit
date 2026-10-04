@@ -1,0 +1,16 @@
+{
+  "description": "reading an unread note from Pluto marks it seen and updates the envelope count",
+  "input": {
+    "trigger": {"kind": "command", "name": "read", "args": ["1"]},
+    "now": "2026-10-03T20:00:00Z",
+    "events": [
+      {"origin": "pluto", "seq": 3, "type": "notes.sent", "ts": "2026-10-03T13:00:00Z", "v": 1, "data": {"text": "first"}},
+      {"origin": "pluto", "seq": 4, "type": "notes.sent", "ts": "2026-10-03T13:05:00Z", "v": 1, "data": {"text": "second"}}
+    ]
+  },
+  "expect": {
+    "say": [{"who": "pluto", "mood": "love", "text": "✉ Note from Pluto · 1:00 pm\nfirst"}],
+    "emit": [{"type": "notes.seen", "data": {"seqs": [3]}, "v": 1}],
+    "prompt": "✉ 1"
+  }
+}
